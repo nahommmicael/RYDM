@@ -78,7 +78,7 @@ export async function fetchRandomRnbFromItunes({ country = "DE", limit = 50, see
   const perQueryLimit = Math.max(20, Math.ceil(limit / 2)); // genug Puffer je Query
 
   const makeUrl = (term, attribute) => {
-    const url = new URL("https://itunes.apple.com/search");
+    const url = new URL("/api/itunes/search", location.origin);
     url.searchParams.set("term", term);
     url.searchParams.set("entity", "musicTrack");
     url.searchParams.set("media", "music");
@@ -217,7 +217,7 @@ export async function fetchRandomRnbFromItunes({ country = "DE", limit = 50, see
 /** Freitext-Suche (z.B. Artistname) */
 export async function searchItunesTracks(query, { country = "DE", limit = 25, minYear = 2018 } = {}) {
   if (!query || !query.trim()) return [];
-  const url = new URL("https://itunes.apple.com/search");
+  const url = new URL("/api/itunes/search", location.origin);
   url.searchParams.set("term", query.trim());
   url.searchParams.set("entity", "musicTrack");
   url.searchParams.set("media", "music");
