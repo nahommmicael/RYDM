@@ -138,6 +138,7 @@ export function createCoverPinsController(map, deps = {}) {
         if (Array.isArray(r) && r.length) return r;
       }
       if (Array.isArray(deps?.playlist) && deps.playlist.length) return deps.playlist;
+      if (Array.isArray(window.__rydmOnlineTracks) && window.__rydmOnlineTracks.length) return window.__rydmOnlineTracks;
     } catch {}
     return allTracks;
   };
@@ -196,6 +197,7 @@ export function createCoverPinsController(map, deps = {}) {
     if (!audio) {
       audio = new Audio();
       audio.preload = "metadata";
+      try { audio.crossOrigin = "anonymous"; } catch {}
     }
 
     playingRing = ringEl || null;
