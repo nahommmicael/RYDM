@@ -5,7 +5,7 @@
 const ARTIST_SEEDS = [
   "tems","sza","brent faiyaz","victoria monet","giveon","h.e.r.",
   "the weeknd","miguel","ty dolla $ign","summer walker","Reezy",
-  "6lack","jhené aiko","khalid","partynextdoor"
+  "6lack","jhené aiko","partynextdoor"
 ];
 
 function pickRandom(arr, n) {
