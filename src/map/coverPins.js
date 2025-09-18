@@ -3,6 +3,30 @@
 import maplibregl from "maplibre-gl";
 import { allTracks } from "../data/tracks";
 
+// ---- helpers to normalize iTunes/local fields ----
+function getCoverUrl(t) {
+  if (!t) return "";
+  const cand = (
+    t.cover || t.artwork || t.image || t.coverUrl ||
+    t.artworkUrl512 || t.artworkUrl100 || t.artworkUrl60 || t.artworkUrl ||
+    (t.album && (t.album.cover || t.album.artwork)) || ""
+  );
+  if (!cand) return "";
+  // Upscale common Apple artwork patterns to 512px if possible
+  try {
+    // .../100x100bb.jpg or .../60x60bb.jpg → 512x512bb.jpg
+    return String(cand).replace(/\/(?:60|100|200|300|400)x\1?\1?bb\.(jpg|png)(?:\?.*)?$/i, "/512x512bb.$1");
+  } catch { return cand; }
+}
+
+function getPreviewUrl(t) {
+  if (!t) return "";
+  // Prefer explicit preview fields (iTunes) then local demo keys
+  return (
+    t.previewUrl || t.preview || t.audioUrl || t.streamUrl || t.mp3 || t.url || ""
+  );
+}
+
 /* ---------- utils ---------- */
 function seededRng(seed) {
   let x = (seed | 0) || 1; // xorshift32
@@ -204,7 +228,13 @@ export function createCoverPinsController(map, deps = {}) {
       if (wasPlayingBefore) wasResumed = true;
     } catch { wasResumed = false; }
 
-    audio.src = track.audioUrl || track.mp3 || track.url || "";
+    const src = getPreviewUrl(track);
+    if (!src) {
+      // No preview available for this track – abort gracefully
+      stopPreview(false);
+      return;
+    }
+    audio.src = src;
     audio.currentTime = 0;
 
     const onLoaded = () => {
@@ -247,7 +277,8 @@ export function createCoverPinsController(map, deps = {}) {
     const tracks = pickTracksFrom(source, count, rnd);
 
     coords.forEach((lngLat, i) => {
-      const t = tracks[i % tracks.length];
+      const t = tracks.length ? tracks[i % tracks.length] : null;
+      if (!t) return; // no track available → skip creating this pin
 
       const el = document.createElement("div");
       el.className = "rydm-cover-pin";
@@ -257,8 +288,8 @@ export function createCoverPinsController(map, deps = {}) {
       el.appendChild(inner);
 
       const img = document.createElement("img");
-      const cover = t.cover || t.artwork || t.image || t.coverUrl || "";
-      img.src = cover;
+      const cover = getCoverUrl(t);
+      img.src = cover || "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36'><rect width='36' height='36' fill='%23121'/></svg>";
       img.alt = "";
       img.loading = "lazy";
       img.decoding = "async";
