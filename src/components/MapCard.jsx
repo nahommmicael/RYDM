@@ -240,6 +240,17 @@ export default function MapCard() {
     return () => window.clearTimeout(id);
   }, [open]);
 
+  // Re-render pins when playlist changes (switch from local → iTunes)
+  useEffect(() => {
+    if (!mapRef.current || !pinsRef.current) return;
+    try {
+      const m = mapRef.current;
+      const centerNow = m.getCenter().toArray();
+      const currentSeed = (typeof mapSync?.get === 'function' ? mapSync.get().seed : 1);
+      pinsRef.current.render({ center: centerNow, seed: currentSeed, radius: 800, count: 5 });
+    } catch {}
+  }, [playlist]);
+
   // Reset dragY wenn wieder geschlossen
   if (!open && dragY.get() !== 0) dragY.set(0);
 

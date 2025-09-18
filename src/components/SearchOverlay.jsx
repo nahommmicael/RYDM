@@ -374,6 +374,17 @@ export default function SearchOverlay({ open, onClose }) {
     return () => window.clearTimeout(id);
   }, [open, sheetW, sheetH, kbGap]);
 
+  // Re-render pins when playlist changes (switch from local → iTunes)
+  useEffect(() => {
+    if (!mapRef.current || !pinsCtrlRef.current) return;
+    try {
+      const m = mapRef.current;
+      const centerNow = m.getCenter().toArray();
+      const currentSeed = (typeof mapSync?.get === 'function' ? mapSync.get().seed : 1);
+      pinsCtrlRef.current.render({ center: centerNow, seed: currentSeed });
+    } catch {}
+  }, [playlist]);
+
   return (
     <div
       className="fixed inset-0 z-[60] pointer-events-none"
