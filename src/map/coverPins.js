@@ -26,8 +26,8 @@ function coordsAround(center, n, rMeters, rnd) {
   }
   return out;
 }
-function pickTracks(n, rnd) {
-  const a = [...allTracks];
+function pickTracksFrom(source, n, rnd) {
+  const a = Array.isArray(source) ? [...source] : [];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(rnd() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
@@ -80,6 +80,7 @@ function ensureCss() {
  *  - resumeMain?: () => void         // Hauptplayer ggf. weiterlaufen lassen nach Preview
  *  - playFull?: (track) => void      // Vollsong starten (z.B. nach Doppeltipp)
  *  - isMainPlaying?: () => boolean  // gibt true zurück, wenn der Hauptplayer aktuell spielt
+ *  - getTracks?: () => Array    // liefert die aktuelle Playlist (Whitelist/Online/Local)
  */
 export function createCoverPinsController(map, deps = {}) {
   ensureCss();
@@ -104,6 +105,17 @@ export function createCoverPinsController(map, deps = {}) {
       }
     } catch {}
     return false;
+  };
+
+  const resolveTracks = () => {
+    try {
+      if (typeof deps?.getTracks === 'function') {
+        const r = deps.getTracks();
+        if (Array.isArray(r) && r.length) return r;
+      }
+      if (Array.isArray(deps?.playlist) && deps.playlist.length) return deps.playlist;
+    } catch {}
+    return allTracks;
   };
 
   const MAX_PREVIEW = 15; // sec
@@ -192,7 +204,7 @@ export function createCoverPinsController(map, deps = {}) {
       if (wasPlayingBefore) wasResumed = true;
     } catch { wasResumed = false; }
 
-    audio.src = track.audioUrl;
+    audio.src = track.audioUrl || track.mp3 || track.url || "";
     audio.currentTime = 0;
 
     const onLoaded = () => {
@@ -231,7 +243,8 @@ export function createCoverPinsController(map, deps = {}) {
 
     const rnd = seededRng(seed || 1);
     const coords = coordsAround(center, count, radius, rnd);
-    const tracks = pickTracks(count, rnd);
+    const source = resolveTracks();
+    const tracks = pickTracksFrom(source, count, rnd);
 
     coords.forEach((lngLat, i) => {
       const t = tracks[i % tracks.length];
@@ -244,7 +257,12 @@ export function createCoverPinsController(map, deps = {}) {
       el.appendChild(inner);
 
       const img = document.createElement("img");
-      img.src = t.cover; img.alt = "";
+      const cover = t.cover || t.artwork || t.image || t.coverUrl || "";
+      img.src = cover;
+      img.alt = "";
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.referrerPolicy = "no-referrer";
       inner.appendChild(img);
 
       // Dim-Layer
