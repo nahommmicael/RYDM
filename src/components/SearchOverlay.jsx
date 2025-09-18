@@ -5,6 +5,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import OverflowMarquee from "./OverflowMarquee";
 import { mapSync } from "../state/mapSync";
 import { createCoverPinsController } from "../map/coverPins";
+import { useTrack } from "../state/TrackContext";
 
 // Map style (dark). Replace key if needed.
 const STYLE_URL =
@@ -76,6 +77,9 @@ export default function SearchOverlay({ open, onClose }) {
   const unsubRef = useRef(null);    // unsubscribe from mapSync
 
   const isSyncingRef = useRef(false); // ← Echo-Guard gegen Ping-Pong
+
+  // Current playlist & player controls from TrackContext
+  const { playlist, setIndex, play } = useTrack();
 
   // expose focus helper so the trigger can focus within the same gesture
   useEffect(() => {
@@ -240,9 +244,22 @@ export default function SearchOverlay({ open, onClose }) {
         try {
           if (createCoverPinsController && !pinsCtrlRef.current) {
             pinsCtrlRef.current = createCoverPinsController(map, {
-              pauseMain: () => { try { window.__playerPause?.() ?? null } catch {} }, // oder via Context, wenn verfügbar
-              resumeMain: () => { try { window.__playerPlay?.() ?? null } catch {} },
-              playFull: (t) => { try { window.__playerPlayFull?.(t) } catch {} }
+              // Optional: you can wire these to your real player if needed
+              pauseMain: () => { try { /* no-op here, MapCard handles main player */ } catch {} },
+              resumeMain: () => { try { /* no-op */ } catch {} },
+              // Play the full track from the *current playlist* (not the local demo list)
+              playFull: (t) => {
+                try {
+                  const list = Array.isArray(playlist) ? playlist : [];
+                  const idx = list.findIndex((x) => x.id === t.id);
+                  if (idx >= 0) {
+                    setIndex(idx);
+                    play().catch(() => {});
+                  }
+                } catch {}
+              },
+              // Provide the tracks for pin covers/previews: iTunes/Whitelist/Local via context
+              getTracks: () => (Array.isArray(playlist) ? playlist : []),
             });
             const s = (mapSync.get && mapSync.get()) || {};
             pinsCtrlRef.current.render({ center: map.getCenter().toArray(), seed: s.seed });

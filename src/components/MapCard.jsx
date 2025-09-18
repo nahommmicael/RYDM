@@ -19,7 +19,7 @@ const RADIAL_MASK = "radial-gradient(circle at center, rgba(0,0,0,0.7) 0%, rgba(
 export default function MapCard() {
   const [open, setOpen] = useState(false);
 
-  const { setIndex, play, pause, isPlaying } = useTrack();
+  const { setIndex, play, pause, isPlaying, playlist } = useTrack();
   const refreshLockRef = useRef(false);     // blocks pin refresh while interacting
   const lastCenterRef = useRef(null);       // last map center for movement threshold
 
@@ -86,12 +86,16 @@ export default function MapCard() {
         resumeMain: () => { try { play().catch(() => {}); } catch {} },
         isMainPlaying: () => !!isPlaying,
         playFull: (t) => {
-          const idx = allTracks.findIndex((x) => x.id === t.id);
-          if (idx >= 0) {
-            setIndex(idx);
-            play().catch(() => {});
-          }
+          try {
+            const list = Array.isArray(playlist) ? playlist : [];
+            const idx = list.findIndex((x) => x.id === t.id);
+            if (idx >= 0) {
+              setIndex(idx);
+              play().catch(() => {});
+            }
+          } catch {}
         },
+        getTracks: () => (Array.isArray(playlist) ? playlist : []),
       });
       const initState = mapSync.get();
       pinsRef.current.render({ center: initState.center, seed: initState.seed, radius: 800, count: 5 });
