@@ -290,78 +290,119 @@ export function createCoverPinsController(map, deps = {}) {
     // Reuse existing markers where possible to avoid reloading images and DOM churn.
     const newIds = new Set();
     const newTracks = tracks || [];
-    // Remove any markers that are no longer used (we'll remove after creation loop)
-coords.forEach((lngLat, i) => {
+
+    coords.forEach((lngLat, i) => {
       const t = tracks.length ? tracks[i % tracks.length] : null;
       if (!t) return; // no track available → skip creating this pin
 
-      const el = document.createElement("div");
-      el.className = "rydm-cover-pin";
+      const id = String(t.id || `idx_${i}`);
+      newIds.add(id);
 
-      const inner = document.createElement("div");
-      inner.className = "rydm-cover-pin-inner";
-      el.appendChild(inner);
-
-      const img = document.createElement("img");
-      const cover = getCoverUrl(t);
-      img.src = cover || "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36'><rect width='36' height='36' fill='%23121'/></svg>";
-      img.alt = "";
-      img.loading = "lazy";
-      img.decoding = "async";
-      img.referrerPolicy = "no-referrer";
-      inner.appendChild(img);
-
-      // Dim-Layer
-      const dim = document.createElement("div");
-      dim.className = "rydm-dim";
-      el.appendChild(dim);
-
-      // Progress-Ring
-      const ringEl = document.createElement("div");
-      ringEl.className = "rydm-ring2";
-      ringEl.style.setProperty("--thick", "2.6px");
-      ringEl.style.setProperty("--p", "0deg");
-      el.appendChild(ringEl);
-
-      // Interactions:
-      // - Tap: start/stop preview (start on first tap, stop if already running)
-      // - Long press (>=480ms): play full track
-      let lpTimer = null;
-      let longPressed = false;
-      let startedByThisPress = false;
-      let wasRunningOnDown = false;
-
-      const clearLP = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } };
-      const isPreviewActiveFor = (track) => !!(playingTrack && audio && !audio.paused && playingTrack.id === track.id);
-
-      // Avoid iOS context menu / image callout
-      el.addEventListener("contextmenu", (e) => e.preventDefault());
-
-      el.addEventListener("pointerdown", (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        longPressed = false;
-        startedByThisPress = false;
-        wasRunningOnDown = isPreviewActiveFor(t);
-
-        // If preview wasn't running for this pin, start it immediately
-        if (!wasRunningOnDown) {
-          startPreview(t, ringEl, dim);
-          startedByThisPress = true;
+      if (markerMap.has(id)) {
+        // Reuse existing marker
+        const obj = markerMap.get(id);
+        obj.marker.setLngLat(lngLat);
+        // Update image src only if changed
+        const cover = getCoverUrl(t);
+        if (obj.img.src !== cover && cover) {
+          obj.img.src = cover;
         }
+      } else {
+        // Create new marker and DOM elements
+        const el = document.createElement("div");
+        el.className = "rydm-cover-pin";
 
-        // Lock map gestures during press to avoid incidental move/seed causing a re-render
-        try { map.dragPan.disable(); map.touchZoomRotate.disable(); } catch {}
+        const inner = document.createElement("div");
+        inner.className = "rydm-cover-pin-inner";
+        el.appendChild(inner);
 
-        // Long-press escalates to full play
-        clearLP();
-        lpTimer = setTimeout(() => {
-          longPressed = true;
-          // Stop preview without auto-resume and play full track
-          stopPreview(false);
-          try { deps?.playFull?.(t); } catch {}
-        }, LONG_PRESS_MS);
-      }, { passive: false });
+        const img = document.createElement("img");
+        const cover = getCoverUrl(t);
+        img.src = cover || "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36'><rect width='36' height='36' fill='%23121'/></svg>";
+        img.alt = "";
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.referrerPolicy = "no-referrer";
+        inner.appendChild(img);
+
+        // Dim-Layer
+        const dim = document.createElement("div");
+        dim.className = "rydm-dim";
+        el.appendChild(dim);
+
+        // Progress-Ring
+        const ringEl = document.createElement("div");
+        ringEl.className = "rydm-ring2";
+        ringEl.style.setProperty("--thick", "2.6px");
+        ringEl.style.setProperty("--p", "0deg");
+        el.appendChild(ringEl);
+
+        // Interactions:
+        // - Tap: start/stop preview (start on first tap, stop if already running)
+        // - Long press (>=480ms): play full track
+        let lpTimer = null;
+        let longPressed = false;
+        let startedByThisPress = false;
+        let wasRunningOnDown = false;
+
+        const clearLP = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } };
+        const isPreviewActiveFor = (track) => !!(playingTrack && audio && !audio.paused && playingTrack.id === track.id);
+
+        // Avoid iOS context menu / image callout
+        el.addEventListener("contextmenu", (e) => e.preventDefault());
+
+        el.addEventListener("pointerdown", (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          longPressed = false;
+          startedByThisPress = false;
+          wasRunningOnDown = isPreviewActiveFor(t);
+
+          // If preview wasn't running for this pin, start it immediately
+          if (!wasRunningOnDown) {
+            startPreview(t, ringEl, dim);
+            startedByThisPress = true;
+          }
+
+          // Lock map gestures during press to avoid incidental move/seed causing a re-render
+          try { map.dragPan.disable(); map.touchZoomRotate.disable(); } catch {}
+
+          // Long-press escalates to full play
+          clearLP();
+          lpTimer = setTimeout(() => {
+            longPressed = true;
+            // Stop preview without auto-resume and play full track
+            stopPreview(false);
+            try { deps?.playFull?.(t); } catch {}
+          }, LONG_PRESS_MS);
+        }, { passive: false });
+        const endPress = () => {
+          // Re-enable gestures after press
+          try { map.dragPan.enable(); map.touchZoomRotate.enable(); } catch {}
+
+          const wasLP = longPressed;
+          clearLP();
+
+          if (wasLP) return; // already escalated to full play
+
+          // If preview was running before this press → user intended to stop it (toggle-off)
+          if (wasRunningOnDown) {
+            stopPreview(true);
+            return;
+          }
+          // If we started preview on pointerdown (quick tap), KEEP it running (do nothing)
+        };
+        el.addEventListener("pointerup", endPress, { passive: true });
+        el.addEventListener("pointercancel", endPress, { passive: true });
+        el.addEventListener("pointerleave", endPress, { passive: true });
+
+        const mk = new maplibregl.Marker({ element: el, anchor: "bottom" })
+          .setLngLat(lngLat)
+          .addTo(map);
+        markerMap.set(id, { marker: mk, el, img });
+      }
+    });
+
     // cleanup: remove markers not in this render
     try {
       for (const [id, obj] of markerMap) {
@@ -371,33 +412,6 @@ coords.forEach((lngLat, i) => {
         }
       }
     } catch {}
-
-
-      const endPress = () => {
-        // Re-enable gestures after press
-        try { map.dragPan.enable(); map.touchZoomRotate.enable(); } catch {}
-
-        const wasLP = longPressed;
-        clearLP();
-
-        if (wasLP) return; // already escalated to full play
-
-        // If preview was running before this press → user intended to stop it (toggle-off)
-        if (wasRunningOnDown) {
-          stopPreview(true);
-          return;
-        }
-        // If we started preview on pointerdown (quick tap), KEEP it running (do nothing)
-      };
-      el.addEventListener("pointerup", endPress, { passive: true });
-      el.addEventListener("pointercancel", endPress, { passive: true });
-      el.addEventListener("pointerleave", endPress, { passive: true });
-
-      const mk = new maplibregl.Marker({ element: el, anchor: "bottom" })
-        .setLngLat(lngLat)
-        .addTo(map);
-      markerMap.set(String(t.id || `idx_${i}`), { marker: mk, el, img });
-    });
   };
 
   const destroy = () => {
