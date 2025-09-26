@@ -20,6 +20,9 @@ export default function MapCard() {
   const [open, setOpen] = useState(false);
 
   const { setIndex, play, pause, isPlaying, playlist } = useTrack();
+  const playlistRef = useRef(playlist);
+  // keep a stable ref so external controllers can always read the latest playlist
+  useEffect(() => { playlistRef.current = playlist; }, [playlist]);
   const refreshLockRef = useRef(false);     // blocks pin refresh while interacting
   const lastCenterRef = useRef(null);       // last map center for movement threshold
 
@@ -95,7 +98,7 @@ export default function MapCard() {
             }
           } catch {}
         },
-        getTracks: () => (Array.isArray(playlist) ? playlist : []),
+        getTracks: () => (Array.isArray(playlistRef.current) ? playlistRef.current : []),
       });
       const initState = mapSync.get();
       pinsRef.current.render({ center: initState.center, seed: initState.seed, radius: 800, count: 5 });

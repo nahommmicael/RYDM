@@ -6,19 +6,23 @@ import { allTracks } from "../data/tracks";
 // ---- helpers to normalize iTunes/local fields ----
 function getCoverUrl(t) {
   if (!t) return "";
-  const cand = (
+  let cand = (
     t.cover || t.artwork || t.image || t.coverUrl ||
     t.artworkUrl512 || t.artworkUrl100 || t.artworkUrl60 || t.artworkUrl ||
     (t.album && (t.album.cover || t.album.artwork)) || ""
   );
   if (!cand) return "";
-  // Upscale common Apple artwork patterns to 512px if possible
   try {
-    // .../100x100bb.jpg or .../60x60bb.jpg → 512x512bb.jpg
-    return String(cand).replace(/\/(?:60|100|200|300|400)x\1?\1?bb\.(jpg|png)(?:\?.*)?$/i, "/512x512bb.$1");
-  } catch { return cand; }
+    let s = String(cand);
+    // some iTunes artwork URLs are protocol-relative
+    if (s.startsWith("//")) s = "https:" + s;
+    // normalize common query strings and upscale typical Apple artwork patterns like /100x100bb.jpg
+    s = s.replace(/\/\d+x\d+bb\.(jpg|png)(?:\?.*)?$/i, "/512x512bb.$1");
+    return s;
+  } catch {
+    return cand;
+  }
 }
-
 function getPreviewUrl(t) {
   if (!t) return "";
   // Prefer explicit preview fields (iTunes) then local demo keys
@@ -109,7 +113,7 @@ function ensureCss() {
 export function createCoverPinsController(map, deps = {}) {
   ensureCss();
 
-  let markers = [];
+  let markerMap = new Map();
   let rafId = null;
   let audio = null;
   let playingRing = null;
@@ -147,8 +151,12 @@ export function createCoverPinsController(map, deps = {}) {
   const LONG_PRESS_MS = 480; // hold to play full
 
   const clear = () => {
-    markers.forEach(m => { try { m.remove(); } catch {} });
-    markers = [];
+    try {
+      for (const [id, obj] of markerMap) {
+        try { obj.marker.remove(); } catch {}
+      }
+      markerMap.clear();
+    } catch {}
   };
 
   const stopPreview = (resume = true) => {
@@ -278,7 +286,12 @@ export function createCoverPinsController(map, deps = {}) {
     const source = resolveTracks();
     const tracks = pickTracksFrom(source, count, rnd);
 
-    coords.forEach((lngLat, i) => {
+    
+    // Reuse existing markers where possible to avoid reloading images and DOM churn.
+    const newIds = new Set();
+    const newTracks = tracks || [];
+    // Remove any markers that are no longer used (we'll remove after creation loop)
+coords.forEach((lngLat, i) => {
       const t = tracks.length ? tracks[i % tracks.length] : null;
       if (!t) return; // no track available → skip creating this pin
 
@@ -349,6 +362,16 @@ export function createCoverPinsController(map, deps = {}) {
           try { deps?.playFull?.(t); } catch {}
         }, LONG_PRESS_MS);
       }, { passive: false });
+    // cleanup: remove markers not in this render
+    try {
+      for (const [id, obj] of markerMap) {
+        if (!newIds.has(id)) {
+          try { obj.marker.remove(); } catch {}
+          markerMap.delete(id);
+        }
+      }
+    } catch {}
+
 
       const endPress = () => {
         // Re-enable gestures after press
@@ -373,7 +396,7 @@ export function createCoverPinsController(map, deps = {}) {
       const mk = new maplibregl.Marker({ element: el, anchor: "bottom" })
         .setLngLat(lngLat)
         .addTo(map);
-      markers.push(mk);
+      markerMap.set(String(t.id || `idx_${i}`), { marker: mk, el, img });
     });
   };
 
