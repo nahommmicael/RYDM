@@ -371,9 +371,14 @@ export function createCoverPinsController(map, deps = {}) {
           clearLP();
           lpTimer = setTimeout(() => {
             longPressed = true;
-            // Stop preview without auto-resume and play full track
             stopPreview(false);
-            try { deps?.playFull?.(t); } catch {}
+            if (typeof deps?.playFull === 'function') {
+              try {
+                deps.playFull(t);
+              } catch (err) {
+                console.error('Failed to play full track', err);
+              }
+            }
           }, LONG_PRESS_MS);
         }, { passive: false });
         const endPress = () => {
