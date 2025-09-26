@@ -90,13 +90,21 @@ export default function MapCard() {
         isMainPlaying: () => !!isPlaying,
         playFull: (t) => {
           try {
-            const list = Array.isArray(playlist) ? playlist : [];
+            const list = Array.isArray(playlistRef.current) ? playlistRef.current : [];
             const idx = list.findIndex((x) => x.id === t.id);
             if (idx >= 0) {
               setIndex(idx);
-              play().catch(() => {});
+              // ensure playback starts, even if already paused
+              const maybePromise = play();
+              if (maybePromise && typeof maybePromise.catch === 'function') {
+                maybePromise.catch(err => console.error('Failed to start playback', err));
+              }
+            } else {
+              console.warn('Track not found in current playlist', t);
             }
-          } catch {}
+          } catch (err) {
+            console.error('playFull error', err);
+          }
         },
         getTracks: () => (Array.isArray(playlistRef.current) ? playlistRef.current : []),
       });
