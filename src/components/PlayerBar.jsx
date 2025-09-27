@@ -225,6 +225,8 @@ export default function PlayerBar() {
 
   const progressRef = useRef(null);
   const volumeRef = useRef(null);
+  // Volume drag helpers (pointer capture + safe cleanup)
+  const volPointerIdRef = useRef(null);
 
   // Body-Scroll lock
   useEffect(() => {
@@ -319,41 +321,92 @@ export default function PlayerBar() {
 
   // ======== Drag-Adjust Volume ========
   const handleVolumePointerDown = (e) => {
-    e.stopPropagation();
+    // stop overlay drag and capture pointer for the volume control
+    try { e.stopPropagation?.(); } catch {}
     e.preventDefault();
+
     setVolDragging(true);
     setVolumeFromClientX(e.clientX);
+
+    const el = volumeRef.current || e.currentTarget;
+
+    // Try pointer capture (best for desktops and modern browsers)
+    try {
+      if (typeof e.pointerId !== 'undefined' && el && el.setPointerCapture) {
+        el.setPointerCapture(e.pointerId);
+        volPointerIdRef.current = e.pointerId;
+      }
+    } catch (err) { /* ignore */ }
+
     const move = (ev) => {
       ev.preventDefault();
       ev.stopPropagation();
       setVolumeFromClientX(ev.clientX);
     };
-    const up = () => {
+
+    const up = (ev) => {
+      try { ev.preventDefault(); ev.stopPropagation(); } catch {}
       setVolDragging(false);
-      window.removeEventListener("pointermove", move, true);
-      window.removeEventListener("pointerup", up, true);
+
+      // release pointer capture if we set it
+      try {
+        if (volPointerIdRef.current && el && el.releasePointerCapture) {
+          el.releasePointerCapture(volPointerIdRef.current);
+        }
+      } catch (err) { /* ignore */ }
+      volPointerIdRef.current = null;
+
+      // cleanup listeners attached to element
+      try {
+        if (el) {
+          el.removeEventListener('pointermove', move);
+          el.removeEventListener('pointerup', up);
+          el.removeEventListener('pointercancel', up);
+        } else {
+          window.removeEventListener('pointermove', move, true);
+          window.removeEventListener('pointerup', up, true);
+        }
+      } catch (err) {}
     };
-    window.addEventListener("pointermove", move, { passive: false, capture: true });
-    window.addEventListener("pointerup", up, { once: true, capture: true });
+
+    // Attach event listeners to element (pointer capture guarantees delivery even if pointer leaves)
+    try {
+      if (el) {
+        el.addEventListener('pointermove', move, { passive: false });
+        el.addEventListener('pointerup', up, { once: true, passive: false });
+        el.addEventListener('pointercancel', up, { once: true, passive: false });
+      } else {
+        window.addEventListener('pointermove', move, { passive: false, capture: true });
+        window.addEventListener('pointerup', up, { once: true, capture: true });
+      }
+    } catch (err) {
+      // fallback: global listeners
+      window.addEventListener('pointermove', move, { passive: false, capture: true });
+      window.addEventListener('pointerup', up, { once: true, capture: true });
+    }
   };
+
   const handleVolumeTouchStart = (e) => {
-    e.stopPropagation();
+    try { e.stopPropagation?.(); } catch {}
     setVolDragging(true);
     setVolumeFromClientX(e.touches[0].clientX);
+
     const move = (ev) => {
       ev.preventDefault();
       ev.stopPropagation();
       setVolumeFromClientX(ev.touches[0].clientX);
     };
-    const end = () => {
+    const end = (ev) => {
+      try { ev.preventDefault(); ev.stopPropagation(); } catch {}
       setVolDragging(false);
-      window.removeEventListener("touchmove", move, true);
-      window.removeEventListener("touchend", end, true);
-      window.removeEventListener("touchcancel", end, true);
+      try {
+        window.removeEventListener('touchmove', move, true);
+      } catch (err) {}
     };
-    window.addEventListener("touchmove", move, { passive: false, capture: true });
-    window.addEventListener("touchend", end, { once: true, capture: true });
-    window.addEventListener("touchcancel", end, { once: true, capture: true });
+
+    window.addEventListener('touchmove', move, { passive: false, capture: true });
+    window.addEventListener('touchend', end, { once: true, capture: true });
+    window.addEventListener('touchcancel', end, { once: true, capture: true });
   };
 
   // ========== Drag-to-close ==========
@@ -687,7 +740,7 @@ export default function PlayerBar() {
             <div
               ref={volumeRef}
               className="flex-1 relative cursor-pointer"
-              style={{ height: 32, touchAction: "none" }}
+              style={{ height: 32, touchAction: "none", position: "relative", zIndex: 40 }}
               onPointerDown={handleVolumePointerDown}
               onTouchStart={handleVolumeTouchStart}
             >
