@@ -319,31 +319,41 @@ export default function PlayerBar() {
 
   // ======== Drag-Adjust Volume ========
   const handleVolumePointerDown = (e) => {
+    e.stopPropagation();
     e.preventDefault();
     setVolDragging(true);
     setVolumeFromClientX(e.clientX);
-    const move = (ev) => { ev.preventDefault(); setVolumeFromClientX(ev.clientX); };
+    const move = (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      setVolumeFromClientX(ev.clientX);
+    };
     const up = () => {
       setVolDragging(false);
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointermove", move, true);
+      window.removeEventListener("pointerup", up, true);
     };
-    window.addEventListener("pointermove", move, { passive: false });
-    window.addEventListener("pointerup", up, { once: true });
+    window.addEventListener("pointermove", move, { passive: false, capture: true });
+    window.addEventListener("pointerup", up, { once: true, capture: true });
   };
   const handleVolumeTouchStart = (e) => {
+    e.stopPropagation();
     setVolDragging(true);
     setVolumeFromClientX(e.touches[0].clientX);
-    const move = (ev) => { ev.preventDefault(); setVolumeFromClientX(ev.touches[0].clientX); };
+    const move = (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      setVolumeFromClientX(ev.touches[0].clientX);
+    };
     const end = () => {
       setVolDragging(false);
-      window.removeEventListener("touchmove", move);
-      window.removeEventListener("touchend", end);
-      window.removeEventListener("touchcancel", end);
+      window.removeEventListener("touchmove", move, true);
+      window.removeEventListener("touchend", end, true);
+      window.removeEventListener("touchcancel", end, true);
     };
-    window.addEventListener("touchmove", move, { passive: false });
-    window.addEventListener("touchend", end, { once: true });
-    window.addEventListener("touchcancel", end, { once: true });
+    window.addEventListener("touchmove", move, { passive: false, capture: true });
+    window.addEventListener("touchend", end, { once: true, capture: true });
+    window.addEventListener("touchcancel", end, { once: true, capture: true });
   };
 
   // ========== Drag-to-close ==========
