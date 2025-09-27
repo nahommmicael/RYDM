@@ -3,6 +3,25 @@
 import maplibregl from "maplibre-gl";
 import { allTracks } from "../data/tracks";
 
+// --- Stable coords cache ---
+// Map: key = JSON.stringify({seed, center:[lng,lat] rounded}), value = {coords, center}
+const stableCoords = [];
+
+// Compare two [lng, lat] arrays within ~20 meters
+function sameCenter(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== 2 || b.length !== 2) return false;
+  // Use haversine formula for distance
+  const toRad = Math.PI / 180;
+  const R = 6371000; // meters
+  const dLat = (b[1] - a[1]) * toRad;
+  const dLng = (b[0] - a[0]) * toRad;
+  const lat1 = a[1] * toRad, lat2 = b[1] * toRad;
+  const sinDLat = Math.sin(dLat / 2), sinDLng = Math.sin(dLng / 2);
+  const h = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
+  const d = 2 * R * Math.asin(Math.sqrt(h));
+  return d < 20; // 20 meters tolerance
+}
+
 // ---- helpers to normalize iTunes/local fields ----
 function getCoverUrl(t) {
   if (!t) return "";
@@ -279,14 +298,31 @@ export function createCoverPinsController(map, deps = {}) {
   };
 
   const render = ({ center, seed, radius = 800, count = 5 }) => {
-    clear();
-
-    const rnd = seededRng(seed || 1);
-    const coords = coordsAround(center, count, radius, rnd);
+    // --- Stable random coords for this seed+center ---
+    let coords;
+    // Find a cached set for this seed and center (within 20 meters)
+    let found = null;
+    for (let entry of stableCoords) {
+      if (entry.seed === seed && sameCenter(entry.center, center)) {
+        found = entry;
+        break;
+      }
+    }
+    if (found && Array.isArray(found.coords) && found.coords.length === count) {
+      coords = found.coords;
+    } else {
+      const rnd = seededRng(seed || 1);
+      coords = coordsAround(center, count, radius, rnd);
+      // Cache this set for future renders
+      stableCoords.push({ seed, center: [...center], coords });
+      // Optionally, prune old cache entries (keep last 10)
+      if (stableCoords.length > 10) stableCoords.splice(0, stableCoords.length - 10);
+    }
+    // Use same seededRng for tracks, but always generate from seed
+    const rndTracks = seededRng(seed || 1);
     const source = resolveTracks();
-    const tracks = pickTracksFrom(source, count, rnd);
+    const tracks = pickTracksFrom(source, count, rndTracks);
 
-    
     // Reuse existing markers where possible to avoid reloading images and DOM churn.
     const newIds = new Set();
     const newTracks = tracks || [];
@@ -307,6 +343,8 @@ export function createCoverPinsController(map, deps = {}) {
         if (obj.img.src !== cover && cover) {
           obj.img.src = cover;
         }
+        // update the bound track reference so event handlers reference the current track
+        try { obj.el._rydmTrack = t; } catch {}
       } else {
         // Create new marker and DOM elements
         const el = document.createElement("div");
@@ -324,6 +362,9 @@ export function createCoverPinsController(map, deps = {}) {
         img.decoding = "async";
         img.referrerPolicy = "no-referrer";
         inner.appendChild(img);
+
+        // bind the track object on the element so handlers always read the current track
+        el._rydmTrack = t;
 
         // Dim-Layer
         const dim = document.createElement("div");
@@ -351,16 +392,18 @@ export function createCoverPinsController(map, deps = {}) {
         // Avoid iOS context menu / image callout
         el.addEventListener("contextmenu", (e) => e.preventDefault());
 
+        const getTrack = () => el._rydmTrack;
+
         el.addEventListener("pointerdown", (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
           longPressed = false;
           startedByThisPress = false;
-          wasRunningOnDown = isPreviewActiveFor(t);
+          wasRunningOnDown = isPreviewActiveFor(getTrack());
 
           // If preview wasn't running for this pin, start it immediately
           if (!wasRunningOnDown) {
-            startPreview(t, ringEl, dim);
+            startPreview(getTrack(), ringEl, dim);
             startedByThisPress = true;
           }
 
@@ -371,10 +414,12 @@ export function createCoverPinsController(map, deps = {}) {
           clearLP();
           lpTimer = setTimeout(() => {
             longPressed = true;
+            // Stop preview without auto-resume and play full track
             stopPreview(false);
+            const cur = getTrack();
             if (typeof deps?.playFull === 'function') {
               try {
-                deps.playFull(t);
+                deps.playFull(cur);
               } catch (err) {
                 console.error('Failed to play full track', err);
               }
