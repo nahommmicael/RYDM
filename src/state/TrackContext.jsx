@@ -165,7 +165,7 @@ export function TrackProvider({ children }) {
     playlist, onlineTracks, loadingOnline, mode, setMode,
 
     // current track & player state
-    track, index, isPlaying, time, duration, progress, volume,
+    track, index, isPlaying, time, duration, progress, volume, setVolume,
 
     // main controls
     play, pause, toggle, next, prev, seekSeconds, setIndex, setTrackById, setMainFromPreview,
