@@ -285,7 +285,7 @@ export default function PlayerBar() {
     if (!el) return;
     const rect = el.getBoundingClientRect();
     const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
-    setVolume(ratio);
+    setVolume(Number.isFinite(ratio) ? ratio : 0);
   };
 
   // ======== Drag-Scrub Progress ========
