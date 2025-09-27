@@ -578,11 +578,12 @@ export default function PlayerBar() {
           {/* Drag-Zone: bis Unterkante Cover (+24px), liegt ÜBER dem Cover */}
           <div
             className="absolute left-0 right-0 z-10 cursor-grab active:cursor-grabbing"
-            style={{ top: 0, height: COVER_TOP + COVER_H + 24, touchAction: "none" }}
-            onPointerDown={onPointerDown}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
+          style={{
+            top: 0,
+            height: COVER_TOP + COVER_H + 24,
+            touchAction: "none",
+            pointerEvents: open ? 'auto' : 'none'
+          }}
           />
           {/* Handle */}
           <div className="absolute left-1/2 -translate-x-1/2 top-[12px] h-1.5 w-12 rounded-full bg-white/30 pointer-events-none" />
