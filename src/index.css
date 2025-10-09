@@ -13,20 +13,17 @@
 html, body, #root {
   margin: 0;
   padding: 0;
-  width: 100%;
-  /* Progressive viewport height fallbacks (old → new). 
-     iOS standalone kann 100vh/100dvh kleiner berechnen; 100lvh nimmt die volle Höhe inkl. Safe-Areas. */
-  height: 100vh;   /* legacy */
-  height: 100dvh;  /* dynamic viewport */
-  height: 100svh;  /* small viewport */
-  height: 100lvh;  /* large viewport – bevorzugt */
-  min-height: 100lvh;
-  height: -webkit-fill-available;   /* iOS PWA full-height */
-  min-height: -webkit-fill-available;
+  width: 100vw;
+  height: 100lvh;
   background: #000;
-  overflow: visible;        /* prevent scrollbars */
-  position: static;         /* kill iOS rubber-band */
-  inset: 0;                /* pin to viewport */
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 @media (display-mode: standalone) {
@@ -220,15 +217,11 @@ html, body, #root, * {
 }
 /* App root centers the device and respects safe-area insets */
 .app-root {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
-  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  display: block;
   overflow: hidden;
 }
 

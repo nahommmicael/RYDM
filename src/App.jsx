@@ -9,8 +9,10 @@ export default function App() {
       <div
         className="device relative rounded-[40px] overflow-hidden bg-black text-white shadow-2xl"
         style={{
-          width: "min(100%, 390px)",   // cap width to design width but allow smaller screens
-          height: "min(100vh, 844px)", // cap height to design height, but never exceed viewport
+          width: "100vw",
+          height: "100lvh",
+          maxWidth: "430px",   // optional upper bound for larger screens
+          maxHeight: "932px",  // iPhone 16 Pro reference
         }}
       >
         <TrackProvider>
