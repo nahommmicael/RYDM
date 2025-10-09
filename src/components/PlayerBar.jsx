@@ -502,7 +502,12 @@ export default function PlayerBar() {
           "motion-reduce:transition-none",
           "border border-white/20",
         ].join(" ")}
-        style={{ bottom: '63px', borderWidth: '0.5px' }}
+        style={{
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
+          borderWidth: "0.5px",
+          paddingLeft: "env(safe-area-inset-left, 0px)",
+          paddingRight: "env(safe-area-inset-right, 0px)",
+        }}
       >
         {/* Mini progress background (very subtle) */}
         <div
