@@ -5,17 +5,13 @@ import "./index.css";
 
 export default function App() {
   return (
-    <div className="app bg-black text-white overflow-hidden">
+    <div className="app-root bg-black text-white">
       <div
-        className="relative rounded-[40px] overflow-hidden bg-black text-white shadow-2xl"
+        className="device relative rounded-[40px] overflow-hidden bg-black text-white shadow-2xl"
         style={{
-          width: "390px",                // echte Breite iPhone 12
-  height: "844px",               // echte Höhe iPhone 12
-  "--scale": "min(calc(100vw / 390), calc(100lvh / 844))",
-  transform: "scale(var(--scale))",
-  transformOrigin: "center center",
+          width: "min(100%, 390px)",   // cap width to design width but allow smaller screens
+          height: "min(100vh, 844px)", // cap height to design height, but never exceed viewport
         }}
-        
       >
         <TrackProvider>
           <Home />

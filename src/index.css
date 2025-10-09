@@ -195,15 +195,10 @@ button:focus-visible, [role="button"]:focus-visible { outline: none !important; 
 /* Stop scroll chaining / pull-to-refresh */
 /* body { overscroll-behavior: none; } */
 /* === Simulate iPhone 12 screen size === */
+/* Disable fixed iPhone-12 frame (legacy) */
 .iphone-12-frame {
-  position: relative;
-  width: 390px;
-  height: 844px;
-  margin: 0 auto;
-  overflow: hidden;
-  border-radius: 40px;
-  box-shadow: 0 0 0 8px #000, 0 20px 60px rgba(0,0,0,0.5);
-  background: #000;
+  /* deprecated: replaced by responsive .device container */
+  display: none;
 }
 
 /* Fill the bottom safe-area with app background so no visual gap appears */
@@ -222,4 +217,29 @@ html, body, #root, * {
   -webkit-touch-callout: none; /* iOS Safari: kein Bild speichern / teilen */
   -webkit-user-select: none;   /* iOS Safari: keine Text-/Bild-Selektion */
   user-select: none;           /* Standard: keine Selektion */
+}
+/* App root centers the device and respects safe-area insets */
+.app-root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Device container: maintains design ratio but adapts to screen */
+.device {
+  box-sizing: border-box;
+  margin: 0 auto;
+  background-clip: padding-box;
+}
+
+/* Prevent horizontal overflow */
+html, body, #root {
+  overflow-x: hidden;
 }
