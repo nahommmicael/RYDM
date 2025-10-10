@@ -9,15 +9,16 @@ export default function App() {
       <div
   className="device relative overflow-hidden bg-black text-white shadow-2xl"
   style={{
-    width: "min(100vw, 430px)",   // passt für 12 & 16 Pro
-    height: "min(100lvh, 932px)", // volle Geräthöhe, capped an iPhone 16
-    margin: "0 auto",
-    paddingTop: "env(safe-area-inset-top, 0px)",
-    paddingBottom: "env(safe-area-inset-bottom, 0px)",
-    paddingLeft: "env(safe-area-inset-left, 0px)",
-    paddingRight: "env(safe-area-inset-right, 0px)",
-    boxSizing: "border-box",
-    position: "relative",
+    width: "min(100vw, 430px)",
+  height: "min(100lvh, 932px)",
+  margin: "0 auto",
+  paddingTop: "env(safe-area-inset-top, 0px)",
+  paddingBottom: "env(safe-area-inset-bottom, 0px)",
+  boxSizing: "border-box",
+  position: "relative",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "flex-start",
   }}
 >
         <TrackProvider>
