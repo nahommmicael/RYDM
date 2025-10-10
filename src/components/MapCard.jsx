@@ -302,9 +302,9 @@ export default function MapCard() {
 
   return (
     <motion.div
-      className="absolute left-[4vw] z-10 border-white/20 border-[0.5px] shadow-[0_10px_60px_rgba(0,0,0,0.35)]"
+      className="absolute left-[16px] z-10 border-white/20 border-[0.5px] shadow-[0_10px_60px_rgba(0,0,0,0.35)]"
       style={{
-        top: "6vh",
+        top: MAPCARD_TOP,
         overflow: "hidden",
         borderRadius: RADIUS,
         y: 0,
