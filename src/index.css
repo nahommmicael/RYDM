@@ -9,19 +9,19 @@
   --safe-right: env(safe-area-inset-right, 0px);
 }
 
-/* Lock viewport: no scrolling, under-Notch full-bleed */
+/* Lock viewport: no scrolling, under-Notch full-bleed and centered */
 html, body, #root {
   margin: 0;
   padding: 0;
   width: 100vw;
   height: 100lvh;
   background: #000;
-  overflow: visible;
+  overflow: hidden;
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   touch-action: none;
   overscroll-behavior: none;
 }
