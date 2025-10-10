@@ -9,8 +9,8 @@ export default function App() {
   <div
     className="relative rounded-[40px] overflow-hidden bg-black text-white shadow-2xl"
     style={{
-      width: "390px", // iPhone 12 design reference
-      height: "844px",
+      width: "402px", // iPhone 12 design reference
+      height: "874px",
       "--scale": "min(calc(100vw / 390), calc(100lvh / 844))",
       transform: "scale(var(--scale))",
       transformOrigin: "top center", // fix center drift
