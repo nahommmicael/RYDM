@@ -13,17 +13,20 @@
 html, body, #root {
   margin: 0;
   padding: 0;
-  width: 100vw;
-  height: 100lvh;
+  width: 100%;
+  /* Progressive viewport height fallbacks (old → new). 
+     iOS standalone kann 100vh/100dvh kleiner berechnen; 100lvh nimmt die volle Höhe inkl. Safe-Areas. */
+  height: 100vh;   /* legacy */
+  height: 100dvh;  /* dynamic viewport */
+  height: 100svh;  /* small viewport */
+  height: 100lvh;  /* large viewport – bevorzugt */
+  min-height: 100lvh;
+  height: -webkit-fill-available;   /* iOS PWA full-height */
+  min-height: -webkit-fill-available;
   background: #000;
-  overflow: visible;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  touch-action: none;
-  overscroll-behavior: none;
+  overflow: visible;        /* prevent scrollbars */
+  position: static;         /* kill iOS rubber-band */
+  inset: 0;                /* pin to viewport */
 }
 
 @media (display-mode: standalone) {
@@ -192,10 +195,15 @@ button:focus-visible, [role="button"]:focus-visible { outline: none !important; 
 /* Stop scroll chaining / pull-to-refresh */
 /* body { overscroll-behavior: none; } */
 /* === Simulate iPhone 12 screen size === */
-/* Disable fixed iPhone-12 frame (legacy) */
 .iphone-12-frame {
-  /* deprecated: replaced by responsive .device container */
-  display: none;
+  position: relative;
+  width: 390px;
+  height: 844px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 40px;
+  box-shadow: 0 0 0 8px #000, 0 20px 60px rgba(0,0,0,0.5);
+  background: #000;
 }
 
 /* Fill the bottom safe-area with app background so no visual gap appears */
@@ -214,25 +222,4 @@ html, body, #root, * {
   -webkit-touch-callout: none; /* iOS Safari: kein Bild speichern / teilen */
   -webkit-user-select: none;   /* iOS Safari: keine Text-/Bild-Selektion */
   user-select: none;           /* Standard: keine Selektion */
-}
-/* App root centers the device and respects safe-area insets */
-.app-root {
-  height: 100%;
-  width: 100%;
-  padding: 0;
-  margin: 0;
-  display: block;
-  overflow: hidden;
-}
-
-/* Device container: maintains design ratio but adapts to screen */
-.device {
-  box-sizing: border-box;
-  margin: 0 auto;
-  background-clip: padding-box;
-}
-
-/* Prevent horizontal overflow */
-html, body, #root {
-  overflow-x: hidden;
 }
