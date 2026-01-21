@@ -56,17 +56,17 @@ export default function Home() {
       <MapCard />
 
       {/* Search */}
-      <button
-        onClick={() => setSearchOpen(true)}
-        className="absolute left-[32px] bottom-[193px] w-[180px] h-[44px] rounded-[36px]
-                   glass z-30 pointer-events-auto
-                   text-left pl-5 pr-4 text-[12px] font-semibold border border-white/20"
-        style={{ borderWidth: "0.5px" }}
-        aria-controls="search-overlay"
-        aria-expanded={searchOpen}
-      >
-        Set your destination …
-      </button>
+<button
+  onClick={() => setSearchOpen(true)}
+  className="absolute left-[32px] top-[615px] w-[180px] h-[44px] rounded-[36px]
+             glass z-30 pointer-events-auto
+             text-left pl-5 pr-4 text-[12px] font-semibold border border-white/20"
+  style={{ borderWidth: "0.5px" }}
+  aria-controls="search-overlay"
+  aria-expanded={searchOpen}
+>
+  Set your destination …
+</button>
 
       {/* Nav-Cluster (leer) */}
       

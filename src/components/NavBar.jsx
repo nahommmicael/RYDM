@@ -1,5 +1,3 @@
-
-
 // src/components/NavBar.jsx
 // Kompakte, wiederverwendbare Navigationsleiste.
 // Standardmäßig rendert sie sich genau an der Position deiner bisherigen Glasfläche
@@ -24,8 +22,8 @@ const PADDING_Y  = 0;    // Innenabstand oben/unten (falls Icons optisch zentrie
 const ICON_GAP   = 7;   // Abstand zwischen den Icons
 
 // === FIGMA POSITIONING (Reference: 393 × 852) ===
-const NAV_X = 245; // set to null to use right/bottom fallback
-const NAV_Y = 615; // (852 - 44 - 193)
+// Use right-anchored responsive positioning. NAV_Y is the Figma TOP (615 = 852 - 44 - 193)
+const NAV_Y = 615;
 
 // ====== ICON-KONSTANTEN (pro Icon separat) ======
 // Größen (Breite/Höhe in px) und optional vertikaler Feintuning-Offset in px
@@ -60,15 +58,8 @@ export default function NavBar({
         position: "absolute",
         width: NAV_W,
         height: NAV_H,
-        ...(NAV_X !== null
-          ? {
-              left: `${NAV_X}px`,
-              top: `${NAV_Y}px`,
-            }
-          : {
-              right: NAV_RIGHT,
-              bottom: `calc(${NAV_BOTTOM}px - env(safe-area-inset-bottom))`,
-            }),
+        right: NAV_RIGHT,
+        top: `${NAV_Y}px`,
         ...style,
       }
     : style;
