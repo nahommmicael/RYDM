@@ -302,14 +302,15 @@ export default function MapCard() {
 
   return (
     <motion.div
-      className="absolute left-[16px] z-10 border-white/20 border-[0.5px] shadow-[0_10px_60px_rgba(0,0,0,0.35)]"
-      style={{
-        top: MAPCARD_TOP,
-        overflow: "hidden",
-        borderRadius: RADIUS,
-        y: 0,
-        touchAction: "auto",
-        userSelect: "none",
+className="absolute z-10 border-white/20 border-[0.5px] shadow-[0_10px_60px_rgba(0,0,0,0.35)]"      style={{
+        left: "50%",
+    x: "-50%",
+    top: MAPCARD_TOP,
+    overflow: "hidden",
+    borderRadius: RADIUS,
+    y: 0,
+    touchAction: "auto",
+    userSelect: "none",
       }}
       initial={false}
       animate={open ? "expanded" : "collapsed"}

@@ -5,26 +5,11 @@ import "./index.css";
 
 export default function App() {
   return (
-    <div className="app bg-black text-white overflow-hidden">
-  <div
-    className="relative rounded-[40px] overflow-hidden bg-black text-white shadow-2xl"
-    style={{
-      width: "402px", // iPhone 12 design reference
-      height: "874px",
-      "--scale": "min(calc(100vw / 390), calc(100lvh / 844))",
-      transform: "scale(var(--scale))",
-      transformOrigin: "top center", // fix center drift
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      translate: "-50% -50%", // perfect centering
-    }}
-  >
-    <TrackProvider>
-      <Home />
-      <PlayerBar />
-    </TrackProvider>
-  </div>
-</div>
+    <div className="app bg-black text-white">
+      <TrackProvider>
+        <Home />
+        <PlayerBar />
+      </TrackProvider>
+    </div>
   );
 }

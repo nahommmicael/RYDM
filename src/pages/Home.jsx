@@ -20,7 +20,7 @@ export default function Home() {
   const __accBtnSize = Math.max(ACCOUNT_BUTTON_MIN, ACCOUNT_ICON_SIZE + ACCOUNT_ICON_PAD * 2);
 
   return (
-    <div className="relative w-full h-full text-white">
+    <div className="relative w-full text-white" style={{ minHeight: "100dvh" }}>
       {/* Hintergrund */}
       <Backdrop duration={720} scaleFrom={1.03} overscanPct={0.03} height={631} />
 
