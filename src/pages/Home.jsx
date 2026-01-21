@@ -58,10 +58,10 @@ export default function Home() {
       {/* Search */}
 <button
   onClick={() => setSearchOpen(true)}
-  className="absolute left-[32px] top-[615px] w-[180px] h-[44px] rounded-[36px]
-             glass z-30 pointer-events-auto
-             text-left pl-5 pr-4 text-[12px] font-semibold border border-white/20"
-  style={{ borderWidth: "0.5px" }}
+  className="absolute left-[32px] w-[180px] h-[44px] rounded-[36px]
+           glass z-30 pointer-events-auto
+           text-left pl-5 pr-4 text-[12px] font-semibold border border-white/20"
+style={{ borderWidth: "0.5px", bottom: "calc(193px * var(--sy))" }}
   aria-controls="search-overlay"
   aria-expanded={searchOpen}
 >

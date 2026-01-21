@@ -59,7 +59,7 @@ export default function NavBar({
         width: NAV_W,
         height: NAV_H,
         right: NAV_RIGHT,
-        top: `${NAV_Y}px`,
+        top: `calc(${NAV_Y}px * var(--sy))`,
         ...style,
       }
     : style;

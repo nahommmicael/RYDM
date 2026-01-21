@@ -339,7 +339,7 @@ const MAPCARD_TOP = MAP_Y * scale;
 className="absolute z-10 border-white/20 border-[0.5px] shadow-[0_10px_60px_rgba(0,0,0,0.35)]"      style={{
         left: "50%",
     x: "-50%",
-    top: `calc(var(--safe-top) + ${MAPCARD_TOP}px)`,
+    top: `calc(${MAPCARD_TOP}px * var(--sy))`,
     overflow: "hidden",
     borderRadius: RADIUS,
     y: 0,

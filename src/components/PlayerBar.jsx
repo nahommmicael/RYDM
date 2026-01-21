@@ -503,7 +503,7 @@ export default function PlayerBar() {
   "border border-white/20",
 ].join(" ")}
         style={{
-  bottom: "max(0px, calc(63px - env(safe-area-inset-bottom)))", borderWidth: "0.5px" }}
+  bottom:"calc(63px * var(--sy))", borderWidth: "0.5px" }}
       >
         {/* Mini progress background (very subtle) */}
         <div
