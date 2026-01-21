@@ -4,20 +4,36 @@ import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 
+// === Design scale (Figma reference: 393 × 852) ===
 const REF_H = 852;
 const REF_W = 393;
 
+// Keep a stable height that ignores iOS keyboard shrink.
+let __baseH = window.innerHeight;
+
 function setDesignScaleVars() {
   const vv = window.visualViewport;
-  const h = vv?.height ?? window.innerHeight;
-  const w = vv?.width ?? window.innerWidth;
+  const hNow = vv?.height ?? window.innerHeight;
+  const wNow = vv?.width ?? window.innerWidth;
 
-  const sy = h / REF_H;
-  const sx = w / REF_W;
+  // iOS keyboard usually causes a large sudden height drop.
+  // We don't want to re-scale the entire UI based on keyboard height.
+  const keyboardLikeDrop = (__baseH - hNow) > 120;
+
+  // Update base height only when it's not a keyboard-driven shrink.
+  if (!keyboardLikeDrop) {
+    __baseH = hNow;
+  }
+
+  const sy = __baseH / REF_H;
+  const sx = wNow / REF_W;
 
   document.documentElement.style.setProperty("--sy", String(sy));
   document.documentElement.style.setProperty("--sx", String(sx));
 }
+
+// Optional: allow Home/SearchOverlay to force a recalculation after close.
+window.__rydmRescale = setDesignScaleVars;
 
 setDesignScaleVars();
 window.visualViewport?.addEventListener("resize", setDesignScaleVars);
