@@ -25,7 +25,10 @@ export default function Home() {
       <Backdrop duration={720} scaleFrom={1.03} overscanPct={0.03} height={631} />
 
       {/* Header-Zeile */}
-      <div className="absolute left-[16px] right-[16px] top-[51px] flex items-center justify-between z-20">
+      <div
+        className="absolute left-[16px] right-[16px] flex items-center justify-between z-20"
+        style={{ top: "calc(62.5px * var(--sy))" }}
+      >
         <h1
           className="
             font-neon text-[60px] leading-none
