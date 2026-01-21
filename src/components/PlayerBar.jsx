@@ -495,17 +495,15 @@ export default function PlayerBar() {
         onClick={() => setOpen(true)}
         onKeyDown={onTriggerKey}
         className={[
-          "fixed left-1/2 -translate-x-1/2 w-[361px] h-[79px] rounded-[36px] min-w-[361px] max-w-[361px] min-h-[79px] max-h-[79px]",
-          "glass px-4 flex items-center text-white z-30 focus:outline-none focus-visible:outline-none",
-          (open && !closing) ? "pointer-events-none opacity-0 scale-[0.98]" : "opacity-100 scale-100",
-          "transition-[opacity,transform] duration-[80ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]",
-          "motion-reduce:transition-none",
-          "border border-white/20",
-        ].join(" ")}
+  "fixed left-1/2 -translate-x-1/2 w-[min(361px,calc(100vw-32px))] h-[79px] rounded-[36px]",
+  "glass px-4 flex items-center text-white z-30 focus:outline-none focus-visible:outline-none",
+  (open && !closing) ? "pointer-events-none opacity-0 scale-[0.98]" : "opacity-100 scale-100",
+  "transition-[opacity,transform] duration-[80ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]",
+  "motion-reduce:transition-none",
+  "border border-white/20",
+].join(" ")}
         style={{
-  bottom: "max(0px, calc(63px - var(--safe-bottom)))",
-  borderWidth: "0.5px",
-}}
+  bottom: "max(0px, calc(63px - env(safe-area-inset-bottom)))", borderWidth: "0.5px" }}
       >
         {/* Mini progress background (very subtle) */}
         <div
