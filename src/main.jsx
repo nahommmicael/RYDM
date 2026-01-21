@@ -4,6 +4,25 @@ import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 
+const REF_H = 852;
+const REF_W = 393;
+
+function setDesignScaleVars() {
+  const vv = window.visualViewport;
+  const h = vv?.height ?? window.innerHeight;
+  const w = vv?.width ?? window.innerWidth;
+
+  const sy = h / REF_H;
+  const sx = w / REF_W;
+
+  document.documentElement.style.setProperty("--sy", String(sy));
+  document.documentElement.style.setProperty("--sx", String(sx));
+}
+
+setDesignScaleVars();
+window.visualViewport?.addEventListener("resize", setDesignScaleVars);
+window.addEventListener("resize", setDesignScaleVars);
+
 // PWA-Register (nur wenn vite-plugin-pwa aktiv ist)
 if (import.meta.env.PROD || import.meta.env.DEV) {
   // lazy import to avoid errors if plugin is off
