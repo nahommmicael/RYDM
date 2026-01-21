@@ -23,6 +23,10 @@ const PADDING_X  = 12;   // Innenabstand links/rechts im Glas
 const PADDING_Y  = 0;    // Innenabstand oben/unten (falls Icons optisch zentriert werden sollen)
 const ICON_GAP   = 7;   // Abstand zwischen den Icons
 
+// === FIGMA POSITIONING (Reference: 393 × 852) ===
+const NAV_X = 245; // set to null to use right/bottom fallback
+const NAV_Y = 615; // (852 - 44 - 193)
+
 // ====== ICON-KONSTANTEN (pro Icon separat) ======
 // Größen (Breite/Höhe in px) und optional vertikaler Feintuning-Offset in px
 const ICON_LIB_W = 36;  const ICON_LIB_H = 36;  const ICON_LIB_Y = 0;
@@ -52,7 +56,21 @@ export default function NavBar({
   ].filter(Boolean).join(" ");
 
   const containerStyle = fixed
-    ? { position: "absolute", right: NAV_RIGHT, bottom: NAV_BOTTOM, width: NAV_W, height: NAV_H, ...style }
+    ? {
+        position: "absolute",
+        width: NAV_W,
+        height: NAV_H,
+        ...(NAV_X !== null
+          ? {
+              left: `${NAV_X}px`,
+              top: `${NAV_Y}px`,
+            }
+          : {
+              right: NAV_RIGHT,
+              bottom: `calc(${NAV_BOTTOM}px - env(safe-area-inset-bottom))`,
+            }),
+        ...style,
+      }
     : style;
 
   const Icon = ({ src, alt = "", active = false, w, h, offsetY = 0 }) => (

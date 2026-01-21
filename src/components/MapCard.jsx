@@ -49,13 +49,23 @@ function useScale() {
 
   return scale;
 }
+  // === Layout relationship (Figma reference: 393 × 852) ===
+  // IMPORTANT: NAV_Y must match the value used in NavBar.jsx when you position it via top.
+  // If your NavBar is specified as "bottom: 193" on a 852px canvas, NAV_Y = 852 - 44 - 193 = 615.
+  const NAV_Y = 615;              // NavBar top (from Figma)
+  const GAP_MAP_TO_NAV = 39;      // gap between MapCard (closed) and NavBar
+  const MAP_H_CLOSED = 395;       // MapCard height in closed state (Figma)
+
+  // MapCard top derived from NavBar so the gap always stays constant
+  const MAP_Y = NAV_Y - GAP_MAP_TO_NAV - MAP_H_CLOSED; // = 181 on the reference frame
+
   // Design-Tokens
   
   const RADIUS = 36 * scale;
 const W = "min(361px, calc(100vw - 32px))";
 const H_COLLAPSED = 395 * scale;
 const H_EXPANDED = 480 * scale;
-const MAPCARD_TOP = 181 * scale;
+const MAPCARD_TOP = MAP_Y * scale;
 
   // Drag handling (nur zum Schließen, wenn expanded)
   const dragY = useMotionValue(0);
