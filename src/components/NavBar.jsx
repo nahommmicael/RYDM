@@ -16,7 +16,7 @@ import searchOff from "../icons/Navigation/searchOff.svg";
 
 // ====== GLAS-/POSITION-KONSTANTEN ======
 const NAV_RIGHT  = 32;   // Abstand vom rechten Rand
-const NAV_BOTTOM = "max(0px, calc(193px - var(--safe-bottom)))";  // Abstand vom unteren Rand
+const NAV_BOTTOM = 193;  // Abstand vom unteren Rand
 const NAV_W      = 132;  // Glas-Breite
 const NAV_H      = 44;   // Glas-Höhe
 const PADDING_X  = 12;   // Innenabstand links/rechts im Glas
