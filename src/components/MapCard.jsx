@@ -328,13 +328,13 @@ const MAPCARD_TOP = 181 * scale;
     <motion.div
 className="absolute z-10 border-white/20 border-[0.5px] shadow-[0_10px_60px_rgba(0,0,0,0.35)]"      style={{
         left: "50%",
-  x: "-50%",
-  bottom: "max(0px, calc(276px - env(safe-area-inset-bottom)))",
-  overflow: "hidden",
-  borderRadius: RADIUS,
-  y: 0,
-  touchAction: "auto",
-  userSelect: "none",
+    x: "-50%",
+    top: `calc(var(--safe-top) + ${MAPCARD_TOP}px)`,
+    overflow: "hidden",
+    borderRadius: RADIUS,
+    y: 0,
+    touchAction: "auto",
+    userSelect: "none",
       }}
       initial={false}
       animate={open ? "expanded" : "collapsed"}
