@@ -52,7 +52,7 @@ function useScale() {
   // Design-Tokens
   
   const RADIUS = 36 * scale;
-const W = 361 * scale;
+const W = "min(361px, calc(100vw - 32px))";
 const H_COLLAPSED = 395 * scale;
 const H_EXPANDED = 480 * scale;
 const MAPCARD_TOP = 181 * scale;
