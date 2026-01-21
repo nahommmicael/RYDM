@@ -18,6 +18,7 @@ const RADIAL_MASK = "radial-gradient(circle at center, rgba(0,0,0,0.7) 0%, rgba(
 
 export default function MapCard() {
   const [open, setOpen] = useState(false);
+  const scale = useScale();
 
   const { setIndex, play, pause, isPlaying, playlist } = useTrack();
   const playlistRef = useRef(playlist);
@@ -26,12 +27,35 @@ export default function MapCard() {
   const refreshLockRef = useRef(false);     // blocks pin refresh while interacting
   const lastCenterRef = useRef(null);       // last map center for movement threshold
 
+  // Reference frame (dein Figma): 393 × 852
+const REF_W = 393;
+const REF_H = 852;
+
+function useScale() {
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const update = () => {
+      // Skaliere proportional wie “Design in Figma”, aber fullscreen
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const s = Math.min(w / REF_W, h / REF_H);
+      setScale(s);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return scale;
+}
   // Design-Tokens
-  const RADIUS = 36;
-  const W = 361;
-  const H_COLLAPSED = 395;
-  const H_EXPANDED = 480; // anpassbar
-  const MAPCARD_TOP = 181; // fixed distance from top edge to map start
+  
+  const RADIUS = 36 * scale;
+const W = 361 * scale;
+const H_COLLAPSED = 395 * scale;
+const H_EXPANDED = 480 * scale;
+const MAPCARD_TOP = 181 * scale;
 
   // Drag handling (nur zum Schließen, wenn expanded)
   const dragY = useMotionValue(0);
