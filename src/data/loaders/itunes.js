@@ -3,9 +3,12 @@
 // Wir ziehen "R&B"-lastige Tracks und normalisieren sie in dein Track-Format.
 
 const ARTIST_SEEDS = [
-  "tems","sza","brent faiyaz","victoria monet","giveon","h.e.r.",
-  "the weeknd","miguel","ty dolla $ign","summer walker","Reezy",
-  "6lack","jhené aiko","partynextdoor"
+  "sza",
+  "the weeknd",
+  "brent faiyaz",
+  "summer walker",
+  "giveon",
+  "h.e.r."
 ];
 
 function pickRandom(arr, n) {
@@ -101,9 +104,8 @@ function mapItunesTrack(r) {
  * Viele (ungefähr) R&B-Tracks mit Previews holen.
  * Nutzt pro Call einen zufälligen Artist-Seed, damit’s abwechslungsreich bleibt.
  */
-export async function fetchRandomRnbFromItunes({ country = "DE", limit = 50, seedCount = ARTIST_SEEDS.length, perArtistCap = 2, minYear = 2018 } = {}) {
+export async function fetchRandomRnbFromItunes({ country = "DE", limit = 50, seedCount = ARTIST_SEEDS.length, perArtistCap = 8, minYear = 2020 } = {}) {
   // 1) Seeds breit anlegen: mehrere Artists + generische R&B-Terme
-  const genericTerms = ["r&b", "neo soul", "r&b soul"]; // weitet die Suche über Seeds hinaus
   const seeds = pickRandom(ARTIST_SEEDS, Math.min(seedCount, ARTIST_SEEDS.length)); // alle (gemischt), wenn seedCount = ARTIST_SEEDS.length
 
   const perQueryLimit = Math.max(20, Math.ceil(limit / 2)); // genug Puffer je Query
@@ -120,11 +122,9 @@ export async function fetchRandomRnbFromItunes({ country = "DE", limit = 50, see
     return params;
   };
 
-  // Queries: erst alle Artists gezielt, dann generische Terme
-  const queries = [
-    ...seeds.map((name) => ({ term: name, attribute: "artistTerm" })),
-    ...genericTerms.map((term) => ({ term, attribute: null })),
-  ];
+  // Queries: nur kuratierte Artists
+  const queries = seeds.map((name) => ({ term: name, attribute: "artistTerm" }));
+  const seededKeys = new Set(seeds.map((s) => normArtist(s)));
 
   const fetches = queries.map((q) =>
     fetchSearchWithFallback(makeParams(q.term, q.attribute))
@@ -135,15 +135,10 @@ export async function fetchRandomRnbFromItunes({ country = "DE", limit = 50, see
   const all = [];
   for (let i = 0; i < settled.length; i++) {
     const data = settled[i] || { results: [] };
-    const q = queries[i];
     const results = (data.results || []).filter((r) => r.previewUrl);
     const filtered = results
       .filter((r) => isNewEnough(r, minYear))
-      .filter((r) => {
-        if (q && q.attribute === "artistTerm") return true; // Seeds: Genre nicht hart filtern
-        const g = (r.primaryGenreName || "").toLowerCase();
-        return g.includes("r&b") || g.includes("soul") || g.includes("neo-soul");
-      })
+      .filter((r) => seededKeys.has(normArtist(r.artistName)))
       .map(mapItunesTrack);
     all.push(...filtered);
   }
@@ -159,7 +154,6 @@ export async function fetchRandomRnbFromItunes({ country = "DE", limit = 50, see
   }
 
   // 2) Buckets pro Artist bilden und pro Bucket shufflen (damit nicht nur Top-1 kommt)
-  const seededKeys = new Set(seeds.map((s) => normArtist(s)));
   const bucketsSeeded = new Map();
   const bucketsOther = new Map();
 
@@ -244,7 +238,7 @@ export async function fetchRandomRnbFromItunes({ country = "DE", limit = 50, see
 }
 
 /** Freitext-Suche (z.B. Artistname) */
-export async function searchItunesTracks(query, { country = "DE", limit = 25, minYear = 2018 } = {}) {
+export async function searchItunesTracks(query, { country = "DE", limit = 25, minYear = 2020 } = {}) {
   if (!query || !query.trim()) return [];
   const params = new URLSearchParams();
   params.set("term", query.trim());
