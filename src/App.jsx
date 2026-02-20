@@ -1,7 +1,6 @@
 import Home from "./pages/Home";
 import PlayerBar from "./components/PlayerBar";
 import { TrackProvider } from "./state/TrackContext";
-import "./index.css";
 
 export default function App() {
   return (

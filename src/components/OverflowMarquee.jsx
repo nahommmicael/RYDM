@@ -184,7 +184,7 @@ export default function OverflowMarquee({
     return () => {
       cancelAnimationFrame(rafRef.current);
     };
-  }, [overflow, fade, endPad, leftInset]);
+  }, [overflow, fade, endPad, leftInset, returnMs]);
 
   return (
     <div

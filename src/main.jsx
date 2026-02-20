@@ -7,37 +7,23 @@ import './index.css'
 // === Design scale (Figma reference: 393 × 852) ===
 const REF_H = 852;
 const REF_W = 393;
-
-// Keep a stable height that ignores iOS keyboard shrink.
-let __baseH = window.innerHeight;
+const IPHONE_16_PRO_W = 402;
+const IPHONE_16_PRO_H = 874;
 
 function setDesignScaleVars() {
-  const vv = window.visualViewport;
-  const hNow = vv?.height ?? window.innerHeight;
-  const wNow = vv?.width ?? window.innerWidth;
-
-  // iOS keyboard usually causes a large sudden height drop.
-  // We don't want to re-scale the entire UI based on keyboard height.
-  const keyboardLikeDrop = (__baseH - hNow) > 120;
-
-  // Update base height only when it's not a keyboard-driven shrink.
-  if (!keyboardLikeDrop) {
-    __baseH = hNow;
-  }
-
-  const sy = __baseH / REF_H;
-  const sx = wNow / REF_W;
+  const sy = IPHONE_16_PRO_H / REF_H;
+  const sx = IPHONE_16_PRO_W / REF_W;
 
   document.documentElement.style.setProperty("--sy", String(sy));
   document.documentElement.style.setProperty("--sx", String(sx));
+  document.documentElement.style.setProperty("--device-w", `${IPHONE_16_PRO_W}px`);
+  document.documentElement.style.setProperty("--device-h", `${IPHONE_16_PRO_H}px`);
 }
 
-// Optional: allow Home/SearchOverlay to force a recalculation after close.
+// Optional: allow Home/SearchOverlay to re-apply fixed values after close.
 window.__rydmRescale = setDesignScaleVars;
 
 setDesignScaleVars();
-window.visualViewport?.addEventListener("resize", setDesignScaleVars);
-window.addEventListener("resize", setDesignScaleVars);
 
 // PWA-Register (nur wenn vite-plugin-pwa aktiv ist)
 if (import.meta.env.PROD || import.meta.env.DEV) {

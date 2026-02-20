@@ -1,8 +1,9 @@
 // src/state/mapSync.js
 // Kleiner Event-Bus + geteilter Zustand (Center/Zoom/Seed/Zielmarker)
 let listeners = [];
+export const STUTTGART_CENTER = [9.1829, 48.7758];
 let state = {
-  center: [13.405, 52.52],
+  center: STUTTGART_CENTER,
   zoom: 12.5,
   seed: 0,                  // ändert sich => Pins neu, identisch auf beiden Karten
   result: null,             // zuletzt gewählte Zielposition

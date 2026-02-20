@@ -145,7 +145,7 @@ export default function Backdrop({
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: "linear-gradient(to bottom, rgba(28,28,30,0.40) 7%, rgba(0,0,0,1) 86%)",
+            backgroundImage: "linear-gradient(to bottom, rgba(16,16,18,0.62) 7%, rgba(0,0,0,1) 86%)",
           }}
         />
       )}

@@ -51,6 +51,37 @@ function isNewEnough(r, minYear) {
   return Number.isFinite(y) && y >= minYear;
 }
 
+function buildItunesUrls(searchParams) {
+  const params = new URLSearchParams(searchParams);
+  params.set("_", String(Date.now())); // Cache-Busting gegen SW-Caches
+
+  const urls = [];
+  urls.push(`/api/itunes/search?${params.toString()}`);
+  urls.push(`https://itunes.apple.com/search?${params.toString()}`);
+  return urls;
+}
+
+async function fetchSearchWithFallback(searchParams) {
+  const urls = buildItunesUrls(searchParams);
+  let lastErr = null;
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) {
+        lastErr = new Error(`HTTP ${res.status} for ${url}`);
+        continue;
+      }
+      return await res.json();
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  if (lastErr) console.warn("iTunes fetch failed on all endpoints", lastErr);
+  return { results: [] };
+}
+
 /** Map iTunes-Result → App-Track */
 function mapItunesTrack(r) {
   return {
@@ -77,17 +108,16 @@ export async function fetchRandomRnbFromItunes({ country = "DE", limit = 50, see
 
   const perQueryLimit = Math.max(20, Math.ceil(limit / 2)); // genug Puffer je Query
 
-  const makeUrl = (term, attribute) => {
-    const url = new URL("/api/itunes/search", location.origin);
-    url.searchParams.set("term", term);
-    url.searchParams.set("entity", "musicTrack");
-    url.searchParams.set("media", "music");
-    url.searchParams.set("limit", String(perQueryLimit));
-    url.searchParams.set("country", country);
-    url.searchParams.set("lang", "de_de");
-    if (attribute) url.searchParams.set("attribute", attribute); // z. B. artistTerm
-    url.searchParams.set("_", String(Date.now())); // Cache-Busting gegen SW-Caches
-    return url;
+  const makeParams = (term, attribute) => {
+    const params = new URLSearchParams();
+    params.set("term", term);
+    params.set("entity", "musicTrack");
+    params.set("media", "music");
+    params.set("limit", String(perQueryLimit));
+    params.set("country", country);
+    params.set("lang", "de_de");
+    if (attribute) params.set("attribute", attribute); // z. B. artistTerm
+    return params;
   };
 
   // Queries: erst alle Artists gezielt, dann generische Terme
@@ -97,8 +127,7 @@ export async function fetchRandomRnbFromItunes({ country = "DE", limit = 50, see
   ];
 
   const fetches = queries.map((q) =>
-    fetch(makeUrl(q.term, q.attribute).toString(), { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : { results: [] }))
+    fetchSearchWithFallback(makeParams(q.term, q.attribute))
       .catch(() => ({ results: [] }))
   );
 
@@ -217,18 +246,15 @@ export async function fetchRandomRnbFromItunes({ country = "DE", limit = 50, see
 /** Freitext-Suche (z.B. Artistname) */
 export async function searchItunesTracks(query, { country = "DE", limit = 25, minYear = 2018 } = {}) {
   if (!query || !query.trim()) return [];
-  const url = new URL("/api/itunes/search", location.origin);
-  url.searchParams.set("term", query.trim());
-  url.searchParams.set("entity", "musicTrack");
-  url.searchParams.set("media", "music");
-  url.searchParams.set("limit", String(limit));
-  url.searchParams.set("country", country);
-  url.searchParams.set("lang", "de_de");
-  url.searchParams.set("_", String(Date.now()));
+  const params = new URLSearchParams();
+  params.set("term", query.trim());
+  params.set("entity", "musicTrack");
+  params.set("media", "music");
+  params.set("limit", String(limit));
+  params.set("country", country);
+  params.set("lang", "de_de");
 
-  const res = await fetch(url.toString(), { cache: "no-store" });
-  if (!res.ok) return [];
-  const data = await res.json();
+  const data = await fetchSearchWithFallback(params);
   return (data.results || [])
     .filter((r) => r.previewUrl)
     .filter((r) => isNewEnough(r, minYear))

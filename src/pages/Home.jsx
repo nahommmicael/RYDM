@@ -5,7 +5,6 @@ const ACCOUNT_ICON_PAD  = 8;  // px – Innenabstand im runden Button
 const ACCOUNT_BUTTON_MIN = 58; // px – minimale Buttongröße wie im Design
 // src/pages/Home.jsx
 import { useState } from "react";
-import { useTrack } from "../state/TrackContext";
 import MapCard from "../components/MapCard";
 import SearchOverlay from "../components/SearchOverlay";
 import accountIcon from "../icons/account.svg";
@@ -13,7 +12,6 @@ import NavBar from "../components/NavBar";
 import Backdrop from "../components/Backdrop";
 
 export default function Home() {
-  const { track } = useTrack();
   const [searchOpen, setSearchOpen] = useState(false);
 
   // Dynamische Buttongröße aus IconSize + Padding (mindestens ACCOUNT_BUTTON_MIN)

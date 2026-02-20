@@ -4,7 +4,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { allTracks } from "../data/tracks";
 import { useTrack } from "../state/TrackContext";
-import { mapSync } from "../state/mapSync";
+import { mapSync, STUTTGART_CENTER } from "../state/mapSync";
 import { createCoverPinsController } from "../map/coverPins";
 
 // MapTiler (dark) style
@@ -79,26 +79,27 @@ const MAPCARD_TOP = MAP_Y * scale;
   const pinsRef = useRef(null);
   const sourceId = "mapcard";
   const userMarkerRef = useRef(null);
-  const watchIdRef = useRef(null);
   const followRef = useRef(true);      // automatisch meiner Position folgen
-  const lastPosRef = useRef(null);     // letzte bekannte Position
+  const lastPosRef = useRef(STUTTGART_CENTER);     // feste Position (Stuttgart)
   const isSyncingRef = useRef(false);   // unterdrückt Re-Publish, wenn View von anderer Map kommt
+  const MAP_FOCUS_ZOOM = 13.2;          // zeigt Pins zuverlässig direkt nach Start
 
-
-  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
-
-  // Haversine: approximate distance in meters between [lng,lat]
-  function metersBetween(a, b) {
-    if (!a || !b) return Infinity;
-    const toRad = Math.PI / 180, R = 6371000;
-    const [lng1, lat1] = a, [lng2, lat2] = b;
-    const dLat = (lat2 - lat1) * toRad;
-    const dLng = (lng2 - lng1) * toRad;
-    const x = Math.sin(dLat/2)**2 + Math.cos(lat1*toRad) * Math.cos(lat2*toRad) * Math.sin(dLng/2)**2;
-    return 2 * R * Math.asin(Math.min(1, Math.sqrt(x)));
-  }
-
-
+  const upsertUserMarker = (map, lngLat) => {
+    if (!userMarkerRef.current) {
+      const el = document.createElement("div");
+      el.style.width = "28px";
+      el.style.height = "36px";
+      el.style.transform = "translateY(-2px)";
+      el.style.filter = "drop-shadow(0 6px 10px rgba(0,0,0,0.45))";
+      el.innerHTML = `
+        <svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 35c5.8-8.4 13-14 13-22A13 13 0 1 0 1 13c0 8 7.2 13.6 13 22Z" fill="#E53935"/>
+          <circle cx="14" cy="13" r="4.5" fill="#211" fill-opacity="0.4"/>
+        </svg>`;
+      userMarkerRef.current = new maplibregl.Marker({ element: el, anchor: "bottom" });
+    }
+    userMarkerRef.current.setLngLat(lngLat).addTo(map);
+  };
 
   // Initialisiere MapLibre nur einmal
   useEffect(() => {
@@ -173,60 +174,14 @@ const MAPCARD_TOP = MAP_Y * scale;
       map.on("zoomstart", () => { followRef.current = false; });
       map.on("rotatestart", () => { followRef.current = false; });
 
-      // Kontinuierlich Position beobachten
-      if ("geolocation" in navigator) {
-        watchIdRef.current = navigator.geolocation.watchPosition(
-          ({ coords }) => {
-            const lngLat = [coords.longitude, coords.latitude];
-            lastPosRef.current = lngLat;
-
-            // Marker erzeugen/aktualisieren (roter Pin)
-            if (!userMarkerRef.current) {
-              const el = document.createElement("div");
-              el.style.width = "28px";
-              el.style.height = "36px";
-              el.style.transform = "translateY(-2px)";
-              el.style.filter = "drop-shadow(0 6px 10px rgba(0,0,0,0.45))";
-              el.innerHTML = `
-                <svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M14 35c5.8-8.4 13-14 13-22A13 13 0 1 0 1 13c0 8 7.2 13.6 13 22Z" fill="#E53935"/>
-                  <circle cx="14" cy="13" r="4.5" fill="#211" fill-opacity="0.4"/>
-                </svg>`;
-              userMarkerRef.current = new maplibregl.Marker({ element: el, anchor: "bottom" });
-            }
-            userMarkerRef.current.setLngLat(lngLat).addTo(map);
-
-            // Karte zentrieren, solange Follow aktiv ist
-            if (followRef.current) {
-              map.easeTo({ center: lngLat, zoom: 16.5, duration: 600 });
-            }
-          },
-          () => {},
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
-        );
-      }
+      // Feste Position: immer Stuttgart, keine Geolocation-Abfrage
+      upsertUserMarker(map, STUTTGART_CENTER);
 
       // Seed pins and remember initial center
       lastCenterRef.current = map.getCenter().toArray();
-      const debouncedRefresh = debounce(() => {
-        const now = map.getCenter().toArray();
-        if (metersBetween(lastCenterRef.current, now) < 100) return; // ignore tiny moves
-        mapSync.bumpSeed(sourceId); // trigger identical re-render on both maps
-        lastCenterRef.current = now;
-      }, 120);
-      map.on('moveend', debouncedRefresh);
-      map.on('zoomend', debouncedRefresh);
 
       map.on('moveend', () => {
         const m = map;
-        // Always re-render pins at the new center using the current global seed –
-        // this keeps pins visible/synced even if the seed did not change.
-        try {
-          const centerNow = m.getCenter().toArray();
-          const currentSeed = mapSync.get().seed;
-          pinsRef.current?.render({ center: centerNow, seed: currentSeed, radius: 800, count: 5 });
-        } catch {}
-
         // If this movement was triggered by the other map, consume the sync and
         // do not echo back another view event.
         if (isSyncingRef.current) {
@@ -262,10 +217,6 @@ const MAPCARD_TOP = MAP_Y * scale;
     });
 
     return () => {
-      if (watchIdRef.current != null && navigator.geolocation) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
-      }
       try { pinsRef.current?.destroy?.(); } catch {}
       unsubscribe?.();
       map.remove();
@@ -301,37 +252,14 @@ const MAPCARD_TOP = MAP_Y * scale;
 
   // User-Position anfahren + Follow wieder aktivieren
   const locateMe = () => {
-    if (!mapRef.current || !navigator.geolocation) return;
+    if (!mapRef.current) return;
     followRef.current = true; // erneut an Position koppeln
 
     const map = mapRef.current;
-    if (lastPosRef.current) {
-      map.easeTo({ center: lastPosRef.current, zoom: 16.5, duration: 600 });
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const lngLat = [coords.longitude, coords.latitude];
-        lastPosRef.current = lngLat;
-        if (!userMarkerRef.current) {
-          const el = document.createElement("div");
-          el.style.width = "28px";
-          el.style.height = "36px";
-          el.style.transform = "translateY(-2px)";
-          el.style.filter = "drop-shadow(0 6px 10px rgba(0,0,0,0.45))";
-          el.innerHTML = `
-            <svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14 35c5.8-8.4 13-14 13-22A13 13 0 1 0 1 13c0 8 7.2 13.6 13 22Z" fill="#E53935"/>
-              <circle cx="14" cy="13" r="4.5" fill="#211" fill-opacity="0.4"/>
-            </svg>`;
-          userMarkerRef.current = new maplibregl.Marker({ element: el, anchor: "bottom" });
-        }
-        userMarkerRef.current.setLngLat(lngLat).addTo(map);
-        map.easeTo({ center: lngLat, zoom: 16.5, duration: 600 });
-      },
-      () => {},
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
-    );
+    const lngLat = STUTTGART_CENTER;
+    lastPosRef.current = lngLat;
+    upsertUserMarker(map, lngLat);
+    map.easeTo({ center: lngLat, zoom: MAP_FOCUS_ZOOM, duration: 600 });
   };
 
   return (

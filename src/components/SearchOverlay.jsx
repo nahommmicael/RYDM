@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import OverflowMarquee from "./OverflowMarquee";
-import { mapSync } from "../state/mapSync";
+import { mapSync, STUTTGART_CENTER } from "../state/mapSync";
 import { createCoverPinsController } from "../map/coverPins";
 import { useTrack } from "../state/TrackContext";
 
@@ -222,7 +222,7 @@ export default function SearchOverlay({ open, onClose }) {
         return;
       }
       const init = (typeof mapSync?.get === 'function') ? (mapSync.get() || {}) : {};
-      const initCenter = Array.isArray(init.center) ? init.center : [13.405, 52.52];
+      const initCenter = Array.isArray(init.center) ? init.center : STUTTGART_CENTER;
       const initZoom = (typeof init.zoom === 'number') ? init.zoom : 12.5;
 
       const map = new maplibregl.Map({
@@ -446,8 +446,6 @@ export default function SearchOverlay({ open, onClose }) {
             style={{ bottom: 76 }}
           >
             <div className="flex flex-col gap-2">
-              {/* keep pins in sync while searching */}
-              {(() => { try { mapSync.bumpSeed?.('search'); } catch {} return null; })()}
               {hits.slice(0, 5).map((f, i) => {
                 const title = f?.place_name || f?.text || "Unknown";
                 const active = i === sel;
