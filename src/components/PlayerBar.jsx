@@ -654,10 +654,22 @@ export default function PlayerBar() {
             />
           </div>
 
-          {/* Textblock – 47px Ränder */}
+          {/* Textblock – 47px Ränder, mit Marquee wie in der Mini-Bar */}
           <div className="absolute" style={{ left: 47, right: 47, top: COVER_TOP + COVER_H + 24 }}>
-            <h2 className="text-[20px] font-black leading-tight">{track.title}</h2>
-            <p className="text-[14px] font-medium text-white/70">{track.artist}</p>
+            <OverflowMarquee
+              text={track.title}
+              className="text-[20px] font-black leading-tight"
+              fade={24}
+              speed={40}
+              slotPx={267}
+            />
+            <OverflowMarquee
+              text={track.artist}
+              className="text-[14px] font-medium text-white/70 mt-1"
+              fade={18}
+              speed={36}
+              slotPx={267}
+            />
           </div>
 
           {/* Progress – larger touch target (32px) with slim visual track */}
