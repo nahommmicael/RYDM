@@ -31,9 +31,13 @@ export default function Home() {
           className="
             font-neon text-[60px] leading-none
             text-[#FFE254]
-            drop-shadow-[0_0_10px_rgba(255,226,84,0.3)]
           "
-          style={{ WebkitTextStroke: "1.5px #FFE254" }}
+          style={{
+            WebkitTextStroke: "0.3px #FFE254",
+            WebkitTextFillColor: "#FFE254",
+            color: "#FFE254",
+            opacity: 1,
+          }}
         >
           Home
         </h1>
