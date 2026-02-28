@@ -198,17 +198,18 @@ export default function SearchOverlay({ open, onClose }) {
   const SHEET_W = 361;
   const MIN_H = 380;
   const MAX_H = 500;
-  const MIN_TOP = 120; // leave headroom
+  const MIN_TOP = 120; // fixed top anchor
+  const MIN_H_WITH_KB = 280; // allow more shrink when keyboard is visible
 
   const reserve = kbGap > 0 ? kbGap : 0;
-  let sheetH = Math.min(MAX_H, Math.max(MIN_H, vh - reserve - 32));
-  const maxByTop = vh - reserve - MIN_TOP;
-  if (sheetH > maxByTop) sheetH = Math.max(MIN_H, maxByTop);
+  const effectiveMinH = reserve > 0 ? MIN_H_WITH_KB : MIN_H;
+  const maxByTop = vh - reserve - MIN_TOP - 12; // keep small margin above keyboard/bottom
+  let sheetH = Math.min(MAX_H, Math.max(effectiveMinH, maxByTop));
+  if (sheetH > maxByTop) sheetH = Math.max(effectiveMinH, maxByTop);
   sheetH = Math.round(sheetH);
 
   const sheetW = Math.min(SHEET_W, vw - 28);
   const sheetLeft = Math.round((vw - sheetW) / 2);
-  const bottom = reserve > 0 ? reserve + 8 : 12; // dock just above keyboard
 
   // Map init once
   useEffect(() => {
@@ -405,9 +406,9 @@ export default function SearchOverlay({ open, onClose }) {
         className="absolute rounded-[32px] overflow-hidden glass-40 transition-[transform,opacity] duration-200"
         style={{
           left: sheetLeft,
+          top: MIN_TOP,
           width: sheetW,
           height: sheetH,
-          bottom: bottom,
           transform: open ? "translateY(0)" : "translateY(20px)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",

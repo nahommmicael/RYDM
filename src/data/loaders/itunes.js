@@ -3,8 +3,6 @@
 // Wir ziehen "R&B"-lastige Tracks und normalisieren sie in dein Track-Format.
 
 const ARTIST_SEEDS = [
-  "sza",
-  "the weeknd",
   "brent faiyaz",
   "summer walker",
   "giveon",

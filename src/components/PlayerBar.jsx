@@ -6,7 +6,9 @@ import nowPlayingIcon from "../icons/nowPlaying.svg";
 import skipIcon from "../icons/PlayerBar/skip.svg";
 import volumeLowIcon from "../icons/volumeLow.svg";
 import volumeHighIcon from "../icons/volumeHigh.svg";
+import queueIcon from "../icons/playlistOff.svg";
 import OverflowMarquee from "./OverflowMarquee";
+const SPECIAL_FEATURE_ICON_SRC = "/icons/SFVibeSync.png";
 
 // --- Crossfade image helper (opacity + light scale) ---
 function CrossfadeImage({ src, className = "", duration = 1000, scaleFrom = 0.80 }) {
@@ -187,6 +189,16 @@ const DRAG_FADE_RANGE = 320;     // px of drag to fully fade scrim
 const SCRIM_MAX_DARK = 0.65;     // peak darkening at fully open
 const SCRIM_MAX_BLUR_PX = 10;    // peak blur at fully open
 
+// ===== Button positions (X/Y from top-left of expanded player overlay) =====
+const PLAYER_SPECIAL_FEATURE_BTN = {
+  x: 117,
+  y: 628,
+  width: 128,
+  height: 56,
+  iconW: 25,
+  iconH: 32,
+};
+
 export default function PlayerBar() {
   // Playlist-Index & aktueller Track
   // Aktueller Track & Navigation aus globalem Player-State
@@ -213,6 +225,7 @@ export default function PlayerBar() {
   // ======== OVERLAY ========
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false); // sanftes Slide-out
+  const [adaptiveMode, setAdaptiveMode] = useState(false);
 
   // Drag-State (State + Ref, damit pointerup IMMER den letzten Wert hat)
   const [dragY, setDragY] = useState(0);
@@ -639,7 +652,11 @@ export default function PlayerBar() {
             onTouchEnd={onTouchEnd}
           />
           {/* Handle */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-[12px] h-1.5 w-12 rounded-full bg-white/30 pointer-events-none" />
+          <div className="absolute left-1/2 -translate-x-1/2 top-[13px] w-[74px] h-[14px] pointer-events-none flex items-center justify-center">
+            <svg width="74" height="14" viewBox="0 0 74 14" fill="none" aria-hidden>
+              <path d="M13 4L37 9L61 4" stroke="rgba(255,255,255,0.74)" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
 
           {/* Cover – mit Apple-Shadow */}
           <div
@@ -654,22 +671,51 @@ export default function PlayerBar() {
             />
           </div>
 
-          {/* Textblock – 47px Ränder, mit Marquee wie in der Mini-Bar */}
-          <div className="absolute" style={{ left: 47, right: 47, top: COVER_TOP + COVER_H + 24 }}>
-            <OverflowMarquee
-              text={track.title}
-              className="text-[20px] font-black leading-tight"
-              fade={24}
-              speed={40}
-              slotPx={267}
-            />
-            <OverflowMarquee
-              text={track.artist}
-              className="text-[14px] font-medium text-white/70 mt-1"
-              fade={18}
-              speed={36}
-              slotPx={267}
-            />
+          {/* Textblock + right-side actions */}
+          <div className="absolute" style={{ left: 39, right: 39, top: COVER_TOP + COVER_H + 20 }}>
+            <div className="relative min-h-[56px]">
+              <div className="min-w-0">
+                <OverflowMarquee
+                  text={track.title}
+                  className="text-[20px] font-black leading-tight"
+                  fade={16}
+                  speed={36}
+                  startPause={1700}
+                  slotPx={182}
+                  leftInset={0}
+                />
+                <OverflowMarquee
+                  text={track.artist}
+                  className="text-[14px] font-medium text-white/70 mt-1"
+                  fade={14}
+                  speed={32}
+                  startPause={1300}
+                  slotPx={182}
+                  leftInset={0}
+                />
+              </div>
+
+              <div className="absolute right-0 top-0 flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Queue"
+                  className="w-10 h-10 p-0 rounded-full bg-white/5 border border-white/12 backdrop-blur-[10px] flex items-center justify-center active:scale-95 transition-transform focus:outline-none focus-visible:ring-1 focus-visible:ring-white/35"
+                >
+                  <img src={queueIcon} alt="" className="w-[18px] h-[18px] object-contain opacity-90" draggable="false" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="More options"
+                  className="w-10 h-10 p-0 rounded-full bg-white/5 border border-white/12 backdrop-blur-[10px] flex items-center justify-center active:scale-95 transition-transform focus:outline-none focus-visible:ring-1 focus-visible:ring-white/35"
+                >
+                  <span className="flex items-center gap-[3px]">
+                    <span className="w-[4px] h-[4px] rounded-full bg-white/85" />
+                    <span className="w-[4px] h-[4px] rounded-full bg-white/85" />
+                    <span className="w-[4px] h-[4px] rounded-full bg-white/85" />
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Progress – larger touch target (32px) with slim visual track */}
@@ -704,7 +750,7 @@ export default function PlayerBar() {
           {/* Controls – centered Play, symmetric skip buttons */}
           <div
             className="absolute left-0 right-0 grid"
-            style={{ bottom: 168, paddingLeft: 56, paddingRight: 56, gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}
+            style={{ bottom: 190, paddingLeft: 56, paddingRight: 56, gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}
           >
             <button
               className="bg-transparent focus:outline-none focus:ring-0 justify-self-start"
@@ -720,14 +766,14 @@ export default function PlayerBar() {
             </button>
 
             <button
-              className="bg-transparent focus:outline-none focus:ring-0 justify-self-center"
+              className="bg-transparent p-0 focus:outline-none focus:ring-0 justify-self-center"
               aria-label={isPlaying ? 'Pause' : 'Play'}
               onClick={togglePlay}
             >
               <img
                 src={isPlaying ? nowPlayingIcon : startIcon}
                 alt=""
-                style={{ width: 44, height: 44 }}
+                style={{ width: 47, height: 47 }}
                 className="select-none"
               />
             </button>
@@ -747,7 +793,7 @@ export default function PlayerBar() {
           </div>
 
           {/* Volume – larger touch target (32px) with slim visual track */}
-          <div className="absolute flex items-center gap-3" style={{ width: 270, left: "50%", transform: "translateX(-50%)", bottom: 96 }}>
+          <div className="absolute flex items-center gap-3" style={{ width: 270, left: "50%", transform: "translateX(-50%)", bottom: 124 }}>
             <img src={volumeLowIcon} alt="" className="block select-none" style={{ width: 20, height: 20 }} />
 
             <div
@@ -777,6 +823,39 @@ export default function PlayerBar() {
             </div>
 
             <img src={volumeHighIcon} alt="" className="block select-none" style={{ width: 20, height: 20 }} />
+          </div>
+
+          <div className="absolute" style={{ left: PLAYER_SPECIAL_FEATURE_BTN.x, top: PLAYER_SPECIAL_FEATURE_BTN.y }}>
+            <button
+              type="button"
+              aria-pressed={adaptiveMode}
+              aria-label="Adaptive playback"
+              onClick={() => setAdaptiveMode((v) => !v)}
+              className="glass p-0 rounded-[999px] border flex items-center justify-center transition-all duration-200 active:scale-[0.98] focus:outline-none"
+              style={{
+                width: PLAYER_SPECIAL_FEATURE_BTN.width,
+                height: PLAYER_SPECIAL_FEATURE_BTN.height,
+                borderColor: adaptiveMode ? "rgba(255,45,45,0.48)" : "rgba(255,255,255,0.2)",
+                boxShadow: adaptiveMode
+                  ? "0 0 14px rgba(255,45,45,0.15), inset 0 0 0 0.5px rgba(255,255,255,0.2)"
+                  : "inset 0 0 0 0.5px rgba(255,255,255,0.2)",
+              }}
+            >
+              <img
+                src={SPECIAL_FEATURE_ICON_SRC}
+                alt=""
+                draggable="false"
+                className="block object-contain transition-all duration-200"
+                style={{
+                  width: PLAYER_SPECIAL_FEATURE_BTN.iconW,
+                  height: PLAYER_SPECIAL_FEATURE_BTN.iconH,
+                  filter: adaptiveMode
+                    ? "brightness(0) saturate(100%) invert(18%) sepia(97%) saturate(7432%) hue-rotate(358deg) brightness(102%) contrast(117%)"
+                    : "none",
+                  opacity: adaptiveMode ? 1 : 0.98,
+                }}
+              />
+            </button>
           </div>
         </div>
       </div>

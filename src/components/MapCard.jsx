@@ -15,9 +15,27 @@ const STYLE_URL =
 const GLASS_BLUR_PX = 6;      // Stärke der Unschärfe (px) im collapsed Zustand
 const GLASS_WHITE_TINT = 0.06; // Deckkraft des weißen Schleiers auf der Glasfläche (0..1)
 const RADIAL_MASK = "radial-gradient(circle at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%)"; // nur für die Karte (collapsed)
+const SPECIAL_FEATURE_ICON_SRC = "/icons/SFVibeSync.png";
+
+// ===== Button positions (X/Y from top-left of expanded map card) =====
+const MAP_LOCATE_BTN = {
+  x: 305,
+  y: 10,
+  size: 44,
+  iconSize: 24,
+};
+
+const MAP_SPECIAL_FEATURE_BTN = {
+  x: 291,
+  y: 366,
+  size: 58,
+  iconW: 28,
+  iconH: 36,
+};
 
 export default function MapCard() {
   const [open, setOpen] = useState(false);
+  const [specialFeatureOn, setSpecialFeatureOn] = useState(false);
   const scale = useScale();
 
   const { setIndex, play, pause, isPlaying, playlist } = useTrack();
@@ -297,7 +315,9 @@ className="absolute z-10 border-white/20 border-[0.5px] shadow-[0_10px_60px_rgba
           style={{ background: "transparent" }}
           onContextMenu={(e) => e.preventDefault()}
         >
-          <div className="w-16 h-1.5 rounded-full bg-white/70 pointer-events-none" />
+          <svg width="74" height="14" viewBox="0 0 74 14" fill="none" aria-hidden className="pointer-events-none">
+            <path d="M13 10L37 5L61 10" stroke="rgba(255,255,255,0.74)" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       )}
 
@@ -358,16 +378,59 @@ className="absolute z-10 border-white/20 border-[0.5px] shadow-[0_10px_60px_rgba
               e.stopPropagation();
               locateMe();
             }}
-            className="absolute right-3 top-6 z-30 w-11 h-11 rounded-[36px] bg-white/10 backdrop-blur-md border-white/20 border-[0.5px] flex items-center justify-center active:scale-95 transition"
-            style={{ pointerEvents: "auto" }}
+            className="absolute z-30 p-0 rounded-full bg-white/5 border border-white/12 backdrop-blur-[10px] flex items-center justify-center active:scale-95 transition-transform focus:outline-none focus-visible:ring-1 focus-visible:ring-white/35"
+            style={{
+              left: MAP_LOCATE_BTN.x,
+              top: MAP_LOCATE_BTN.y,
+              width: MAP_LOCATE_BTN.size,
+              height: MAP_LOCATE_BTN.size,
+              pointerEvents: "auto",
+            }}
           >
             <svg
-              className="block w-[calc(100%_-_6px)] h-[calc(100%_-_6px)]"
+              className="block pointer-events-none shrink-0"
+              style={{ width: MAP_LOCATE_BTN.iconSize, height: MAP_LOCATE_BTN.iconSize }}
               viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
             >
-              <path d="M12 4v2m0 12v2m8-8h-2M6 12H4m12 0a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z" stroke="white" strokeWidth="2.6" strokeLinecap="round" />
-              <circle cx="12" cy="12" r="2.8" fill="white" />
+              <circle cx="12" cy="12" r="6.4" stroke="rgba(255,255,255,0.95)" strokeWidth="3" />
+              <circle cx="12" cy="12" r="2.4" fill="rgba(255,255,255,0.95)" />
+              <path d="M12 2.4V5.2M12 18.8V21.6M2.4 12H5.2M18.8 12H21.6" stroke="rgba(255,255,255,0.95)" strokeWidth="3" strokeLinecap="round" />
             </svg>
+          </button>
+        )}
+
+        {open && (
+          <button
+            type="button"
+            aria-label="Special feature"
+            aria-pressed={specialFeatureOn}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSpecialFeatureOn((v) => !v);
+            }}
+            className="absolute z-30 rounded-full glass border border-white/20 flex items-center justify-center active:scale-95 transition"
+            style={{
+              left: MAP_SPECIAL_FEATURE_BTN.x,
+              top: MAP_SPECIAL_FEATURE_BTN.y,
+              width: MAP_SPECIAL_FEATURE_BTN.size,
+              height: MAP_SPECIAL_FEATURE_BTN.size,
+              pointerEvents: "auto",
+            }}
+          >
+            <img
+              src={SPECIAL_FEATURE_ICON_SRC}
+              alt=""
+              draggable="false"
+              className="block object-contain transition-all duration-200"
+              style={{
+                width: MAP_SPECIAL_FEATURE_BTN.iconW,
+                height: MAP_SPECIAL_FEATURE_BTN.iconH,
+                filter: specialFeatureOn
+                  ? "brightness(0) saturate(100%) invert(18%) sepia(97%) saturate(7432%) hue-rotate(358deg) brightness(102%) contrast(117%)"
+                  : "none",
+                opacity: specialFeatureOn ? 1 : 0.98,
+              }}
+            />
           </button>
         )}
       </motion.div>
